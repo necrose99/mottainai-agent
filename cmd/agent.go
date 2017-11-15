@@ -1,10 +1,14 @@
 package cmd
 
 import (
+	"time"
+
 	"github.com/MottainaiCI/mottainai-server/pkg/agentconn"
+	"github.com/MottainaiCI/mottainai-server/pkg/client"
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
+
+	"github.com/MottainaiCI/mottainai-server/pkg/utils"
 	"github.com/RichardKnop/machinery/v1/log"
-	"github.com/mudler/mottainai-server/pkg/utils"
 
 	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
 	"github.com/urfave/cli"
@@ -29,6 +33,15 @@ func runAgent(c *cli.Context) error {
 	log.INFO.Println("Worker ID: " + ID)
 
 	worker := rabbit.NewWorker(ID, setting.AgentConcurrency)
+	utils.RecurringTimer(func() { Register(ID) }, 20*time.Second)
 
 	return worker.Launch()
+}
+
+func Register(ID string) {
+	fetcher := client.NewFetcher()
+	fetcher.GetOptions("/nodes/register", map[string]string{
+		"key":    setting.AgentKey,
+		"nodeid": ID,
+	})
 }
