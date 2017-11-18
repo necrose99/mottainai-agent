@@ -33,7 +33,8 @@ func runAgent(c *cli.Context) error {
 	log.INFO.Println("Worker ID: " + ID)
 
 	worker := rabbit.NewWorker(ID, setting.AgentConcurrency)
-	utils.RecurringTimer(func() { Register(ID) }, 360*time.Second)
+	stopRegisterTimer := utils.RecurringTimer(func() { Register(ID) }, 360*time.Second)
+	defer func() { stopRegisterTimer <- true }()
 
 	return worker.Launch()
 }
