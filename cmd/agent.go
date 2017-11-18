@@ -33,13 +33,13 @@ func runAgent(c *cli.Context) error {
 	log.INFO.Println("Worker ID: " + ID)
 
 	worker := rabbit.NewWorker(ID, setting.AgentConcurrency)
-	utils.RecurringTimer(func() { Register(ID) }, 20*time.Second)
+	utils.RecurringTimer(func() { Register(ID) }, 360*time.Second)
 
 	return worker.Launch()
 }
 
 func Register(ID string) {
-	fetcher := client.NewFetcher()
+	fetcher := client.NewClient()
 	fetcher.GetOptions("/nodes/register", map[string]string{
 		"key":    setting.AgentKey,
 		"nodeid": ID,
