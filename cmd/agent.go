@@ -5,6 +5,7 @@ import (
 
 	"github.com/MottainaiCI/mottainai-server/pkg/agentconn"
 	"github.com/MottainaiCI/mottainai-server/pkg/client"
+
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 
 	"github.com/MottainaiCI/mottainai-server/pkg/utils"
@@ -19,10 +20,16 @@ var Agent = cli.Command{
 	Usage:       "Start agent",
 	Description: `Mottainai agent`,
 	Action:      runAgent,
+	Flags: []cli.Flag{
+		stringFlag("config, c", "custom/conf/agent.yml", "Custom configuration file path"),
+	},
 }
 
 func runAgent(c *cli.Context) error {
 	setting.GenDefault()
+	if c.IsSet("config") {
+		setting.LoadFromFileEnvironment(c.String("config"))
+	}
 
 	rabbit, m_error := agentconn.NewMachineryServer()
 	if m_error != nil {
