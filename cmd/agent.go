@@ -32,7 +32,7 @@ func runAgent(c *cli.Context) error {
 	ID := utils.GenID()
 	log.INFO.Println("Worker ID: " + ID)
 
-	worker := rabbit.NewWorker(ID, setting.AgentConcurrency)
+	worker := rabbit.NewWorker(ID, setting.Configuration.AgentConcurrency)
 	stopRegisterTimer := utils.RecurringTimer(func() { Register(ID) }, 360*time.Second)
 	defer func() { stopRegisterTimer <- true }()
 
@@ -42,7 +42,7 @@ func runAgent(c *cli.Context) error {
 func Register(ID string) {
 	fetcher := client.NewClient()
 	fetcher.GetOptions("/nodes/register", map[string]string{
-		"key":    setting.AgentKey,
+		"key":    setting.Configuration.AgentKey,
 		"nodeid": ID,
 	})
 }
