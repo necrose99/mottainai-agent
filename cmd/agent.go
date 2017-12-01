@@ -48,8 +48,5 @@ func runAgent(c *cli.Context) error {
 
 func Register(ID string) {
 	fetcher := client.NewClient()
-	fetcher.GetOptions("/nodes/register", map[string]string{
-		"key":    setting.Configuration.AgentKey,
-		"nodeid": ID,
-	})
+	fetcher.RegisterNode(ID)
 }
