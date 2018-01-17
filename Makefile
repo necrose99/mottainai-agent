@@ -2,7 +2,7 @@ NAME ?= mottainai-agent
 PACKAGE_NAME ?= $(NAME)
 PACKAGE_CONFLICT ?= $(PACKAGE_NAME)-beta
 REVISION := $(shell git rev-parse --short HEAD || echo unknown)
-VERSION := $(shell git describe --tags || cat pkg/settings/settings.go | grep -o 'VERSION = "[^"]*"' | awk '{ print $5 }' | sed 's:"::g' || echo dev)
+VERSION := $(shell git describe --tags || echo $(REVISION) || echo dev)
 VERSION := $(shell echo $(VERSION) | sed -e 's/^v//g')
 ITTERATION := $(shell date +%s)
 BUILD_PLATFORMS ?= -osarch="linux/amd64" -osarch="linux/386" -osarch="linux/arm"
