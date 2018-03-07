@@ -25,8 +25,6 @@ import (
 
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 
-	corelog "log"
-
 	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
 	"github.com/MottainaiCI/mottainai-server/pkg/utils"
 	machinery "github.com/RichardKnop/machinery/v1"
@@ -56,14 +54,18 @@ func runAgent(c *cli.Context) error {
 	if m_error != nil {
 		panic(m_error)
 	}
-	agenttasks.RegisterTasks(rabbit)
+
+	th := agenttasks.DefaultTaskHandler()
+	th.RegisterTasks(rabbit)
+	agent.Map(th)
 	ID := utils.GenID()
 	log.INFO.Println("Worker ID: " + ID)
 
 	worker := rabbit.NewWorker(ID, setting.Configuration.AgentConcurrency)
-	agent.TimerSeconds(int64(200), true, func(l *corelog.Logger) {
-		Register(ID)
-	})
+	Register(ID)
+	// agent.TimerSeconds(int64(200), true, func(l *corelog.Logger) {
+	// 		Register(ID)
+	// 	})
 
 	go func(w *machinery.Worker, a *anagent.Anagent) {
 		agent.Map(w)
