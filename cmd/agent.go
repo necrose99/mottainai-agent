@@ -20,8 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"github.com/MottainaiCI/mottainai-server/pkg/agentconn"
 	"github.com/MottainaiCI/mottainai-server/pkg/client"
+	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
 
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 
@@ -29,7 +29,6 @@ import (
 	"github.com/MottainaiCI/mottainai-server/pkg/utils"
 	machinery "github.com/RichardKnop/machinery/v1"
 	"github.com/RichardKnop/machinery/v1/log"
-	anagent "github.com/mudler/anagent"
 	"github.com/urfave/cli"
 )
 
@@ -45,12 +44,12 @@ var Agent = cli.Command{
 
 func runAgent(c *cli.Context) error {
 	setting.GenDefault()
-	agent := anagent.New()
+	agent := mottainai.NewAgent()
 	if c.IsSet("config") {
 		setting.LoadFromFileEnvironment(c.String("config"))
 	}
 
-	rabbit, m_error := agentconn.NewMachineryServer()
+	rabbit, m_error := mottainai.New().NewMachineryServer()
 	if m_error != nil {
 		panic(m_error)
 	}
@@ -67,7 +66,7 @@ func runAgent(c *cli.Context) error {
 	// 		Register(ID)
 	// 	})
 
-	go func(w *machinery.Worker, a *anagent.Anagent) {
+	go func(w *machinery.Worker, a *mottainai.MottainaiAgent) {
 		agent.Map(w)
 		agent.Start()
 	}(worker, agent)
