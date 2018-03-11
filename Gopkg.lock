@@ -43,7 +43,7 @@
     "pkg/tasks",
     "pkg/utils"
   ]
-  revision = "5767d5efcec31f8c134837d81a18b1b3ccb2e548"
+  revision = "349820d9041c1085aeca70db8b53de608e794852"
 
 [[projects]]
   branch = "master"
@@ -343,7 +343,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "d0aafc73d5cdc42264b0af071c261abac580695e"
+  revision = "ae89d30ce0c63142b652837da33d782e2b0a9b25"
 
 [[projects]]
   branch = "master"
