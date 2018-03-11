@@ -20,37 +20,32 @@ import (
 	"github.com/HouzuoGuo/tiedot/dberr"
 )
 
-const (
-	DOC_MAX_ROOM = 2 * 1048576 // Max document size (2 MBytes)
-	DOC_HEADER   = 1 + 10      // Document header size - validity (single byte), document room (int 10 bytes)
-	// Pre-compiled document padding (128 spaces)
-	PADDING     = "                                                                                                                                "
-	LEN_PADDING = len(PADDING)
-)
-
 // Collection file contains document headers and document text data.
 type Collection struct {
 	*DataFile
+	*Config
 }
 
 // Open a collection file.
-func OpenCollection(path string) (col *Collection, err error) {
+func (conf *Config) OpenCollection(path string) (col *Collection, err error) {
 	col = new(Collection)
-	col.DataFile, err = OpenDataFile(path, COL_FILE_GROWTH)
+	col.DataFile, err = OpenDataFile(path, conf.ColFileGrowth)
+	col.Config = conf
+	col.Config.CalculateConfigConstants()
 	return
 }
 
 // Find and retrieve a document by ID (physical document location). Return value is a copy of the document.
 func (col *Collection) Read(id int) []byte {
-	if id < 0 || id > col.Used-DOC_HEADER || col.Buf[id] != 1 {
+	if id < 0 || id > col.Used-DocHeader || col.Buf[id] != 1 {
 		return nil
-	} else if room, _ := binary.Varint(col.Buf[id+1 : id+11]); room > DOC_MAX_ROOM {
+	} else if room, _ := binary.Varint(col.Buf[id+1 : id+11]); room > int64(col.DocMaxRoom) {
 		return nil
-	} else if docEnd := id + DOC_HEADER + int(room); docEnd >= col.Size {
+	} else if docEnd := id + DocHeader + int(room); docEnd >= col.Size {
 		return nil
 	} else {
 		docCopy := make([]byte, room)
-		copy(docCopy, col.Buf[id+DOC_HEADER:docEnd])
+		copy(docCopy, col.Buf[id+DocHeader:docEnd])
 		return docCopy
 	}
 }
@@ -58,11 +53,11 @@ func (col *Collection) Read(id int) []byte {
 // Insert a new document, return the new document ID.
 func (col *Collection) Insert(data []byte) (id int, err error) {
 	room := len(data) << 1
-	if room > DOC_MAX_ROOM {
-		return 0, dberr.New(dberr.ErrorDocTooLarge, DOC_MAX_ROOM, room)
+	if room > col.DocMaxRoom {
+		return 0, dberr.New(dberr.ErrorDocTooLarge, col.DocMaxRoom, room)
 	}
 	id = col.Used
-	docSize := DOC_HEADER + room
+	docSize := DocHeader + room
 	if err = col.EnsureSize(docSize); err != nil {
 		return
 	}
@@ -70,13 +65,13 @@ func (col *Collection) Insert(data []byte) (id int, err error) {
 	// Write validity, room, document data and padding
 	col.Buf[id] = 1
 	binary.PutVarint(col.Buf[id+1:id+11], int64(room))
-	copy(col.Buf[id+DOC_HEADER:col.Used], data)
-	for padding := id + DOC_HEADER + len(data); padding < col.Used; padding += LEN_PADDING {
-		copySize := LEN_PADDING
-		if padding+LEN_PADDING >= col.Used {
+	copy(col.Buf[id+DocHeader:col.Used], data)
+	for padding := id + DocHeader + len(data); padding < col.Used; padding += col.LenPadding {
+		copySize := col.LenPadding
+		if padding+col.LenPadding >= col.Used {
 			copySize = col.Used - padding
 		}
-		copy(col.Buf[padding:padding+copySize], PADDING)
+		copy(col.Buf[padding:padding+copySize], col.Padding)
 	}
 	return
 }
@@ -84,30 +79,30 @@ func (col *Collection) Insert(data []byte) (id int, err error) {
 // Overwrite or re-insert a document, return the new document ID if re-inserted.
 func (col *Collection) Update(id int, data []byte) (newID int, err error) {
 	dataLen := len(data)
-	if dataLen > DOC_MAX_ROOM {
-		return 0, dberr.New(dberr.ErrorDocTooLarge, DOC_MAX_ROOM, dataLen)
+	if dataLen > col.DocMaxRoom {
+		return 0, dberr.New(dberr.ErrorDocTooLarge, col.DocMaxRoom, dataLen)
 	}
-	if id < 0 || id >= col.Used-DOC_HEADER || col.Buf[id] != 1 {
+	if id < 0 || id >= col.Used-DocHeader || col.Buf[id] != 1 {
 		return 0, dberr.New(dberr.ErrorNoDoc, id)
 	}
 	currentDocRoom, _ := binary.Varint(col.Buf[id+1 : id+11])
-	if currentDocRoom > DOC_MAX_ROOM {
+	if currentDocRoom > int64(col.DocMaxRoom) {
 		return 0, dberr.New(dberr.ErrorNoDoc, id)
 	}
-	if docEnd := id + DOC_HEADER + int(currentDocRoom); docEnd >= col.Size {
+	if docEnd := id + DocHeader + int(currentDocRoom); docEnd >= col.Size {
 		return 0, dberr.New(dberr.ErrorNoDoc, id)
 	}
 	if dataLen <= int(currentDocRoom) {
-		padding := id + DOC_HEADER + len(data)
-		paddingEnd := id + DOC_HEADER + int(currentDocRoom)
+		padding := id + DocHeader + len(data)
+		paddingEnd := id + DocHeader + int(currentDocRoom)
 		// Overwrite data and then overwrite padding
-		copy(col.Buf[id+DOC_HEADER:padding], data)
-		for ; padding < paddingEnd; padding += LEN_PADDING {
-			copySize := LEN_PADDING
-			if padding+LEN_PADDING >= paddingEnd {
+		copy(col.Buf[id+DocHeader:padding], data)
+		for ; padding < paddingEnd; padding += col.LenPadding {
+			copySize := col.LenPadding
+			if padding+col.LenPadding >= paddingEnd {
 				copySize = paddingEnd - padding
 			}
-			copy(col.Buf[padding:padding+copySize], PADDING)
+			copy(col.Buf[padding:padding+copySize], col.Padding)
 		}
 		return id, nil
 	}
@@ -120,7 +115,7 @@ func (col *Collection) Update(id int, data []byte) (newID int, err error) {
 // Delete a document by ID.
 func (col *Collection) Delete(id int) error {
 
-	if id < 0 || id > col.Used-DOC_HEADER || col.Buf[id] != 1 {
+	if id < 0 || id > col.Used-DocHeader || col.Buf[id] != 1 {
 		return dberr.New(dberr.ErrorNoDoc, id)
 	}
 
@@ -133,12 +128,12 @@ func (col *Collection) Delete(id int) error {
 
 // Run the function on every document; stop when the function returns false.
 func (col *Collection) ForEachDoc(fun func(id int, doc []byte) bool) {
-	for id := 0; id < col.Used-DOC_HEADER && id >= 0; {
+	for id := 0; id < col.Used-DocHeader && id >= 0; {
 		validity := col.Buf[id]
 		room, _ := binary.Varint(col.Buf[id+1 : id+11])
-		docEnd := id + DOC_HEADER + int(room)
-		if (validity == 0 || validity == 1) && room <= DOC_MAX_ROOM && docEnd > 0 && docEnd <= col.Used {
-			if validity == 1 && !fun(id, col.Buf[id+DOC_HEADER:docEnd]) {
+		docEnd := id + DocHeader + int(room)
+		if (validity == 0 || validity == 1) && room <= int64(col.DocMaxRoom) && docEnd > 0 && docEnd <= col.Used {
+			if validity == 1 && !fun(id, col.Buf[id+DocHeader:docEnd]) {
 				break
 			}
 			id = docEnd

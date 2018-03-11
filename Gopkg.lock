@@ -11,6 +11,7 @@
   revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
 
 [[projects]]
+  branch = "master"
   name = "github.com/HouzuoGuo/tiedot"
   packages = [
     "data",
@@ -19,8 +20,7 @@
     "gommap",
     "tdlog"
   ]
-  revision = "96fa90b5e4620f677d2737bc5358329040942adb"
-  version = "3.4"
+  revision = "791033267fb3d7b02f0465a2527e8048485ee506"
 
 [[projects]]
   name = "github.com/Microsoft/go-winio"
@@ -43,7 +43,7 @@
     "pkg/tasks",
     "pkg/utils"
   ]
-  revision = "0769fb3ef670c9c1b7664e39cd60e9fd96d590ba"
+  revision = "5767d5efcec31f8c134837d81a18b1b3ccb2e548"
 
 [[projects]]
   branch = "master"
@@ -166,7 +166,7 @@
     "pkg/term",
     "pkg/term/windows"
   ]
-  revision = "b9cc5cba6964b565e8b2cf1ff50c3e946a924fc8"
+  revision = "a575b0b1384b2ba89b79cbd7e770fbeb616758b3"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -187,10 +187,10 @@
   version = "v1.6.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/fsouza/go-dockerclient"
   packages = ["."]
-  revision = "ca33ff277b527ce11b793e62f9ba244129b01caf"
-  version = "v1.2.0"
+  revision = "b4b709947ca6022744c3989d7741c069f29357e4"
 
 [[projects]]
   name = "github.com/garyburd/redigo"
@@ -249,10 +249,10 @@
   version = "v0.0.3"
 
 [[projects]]
+  branch = "master"
   name = "github.com/michaelklishin/rabbit-hole"
   packages = ["."]
-  revision = "751d8f6874248f7243698c6f8377983879d744e9"
-  version = "v1.4.0"
+  revision = "8ea6071d12bbf59ed5a948573bc0e3c350bbbc32"
 
 [[projects]]
   branch = "master"
@@ -342,10 +342,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = [
-    "context",
-    "context/ctxhttp"
-  ]
+  packages = ["context"]
   revision = "d0aafc73d5cdc42264b0af071c261abac580695e"
 
 [[projects]]
@@ -397,11 +394,10 @@
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d42b031f88d11c8bc20292e8b69a90e4d221ff84b5cc14e1d55175f04bbc0e40"
+  inputs-digest = "48a269d88db762d5de34eb8dc7eb19ef0cda6bc07381757a5225b12b858fcebd"
   solver-name = "gps-cdcl"
   solver-version = 1

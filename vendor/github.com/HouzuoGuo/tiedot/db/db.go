@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/HouzuoGuo/tiedot/data"
 	"github.com/HouzuoGuo/tiedot/tdlog"
 )
 
@@ -26,6 +27,7 @@ const (
 
 // Database structures.
 type DB struct {
+	Config     *data.Config
 	path       string          // Root path of database directory
 	numParts   int             // Total number of partitions
 	cols       map[string]*Col // All collections
@@ -35,7 +37,12 @@ type DB struct {
 // Open database and load all collections & indexes.
 func OpenDB(dbPath string) (*DB, error) {
 	rand.Seed(time.Now().UnixNano()) // document ID generation relies on this RNG
-	db := &DB{path: dbPath, schemaLock: new(sync.RWMutex)}
+	d, err := data.CreateOrReadConfig(dbPath)
+	if err != nil {
+		return nil, err
+	}
+	db := &DB{Config: d, path: dbPath, schemaLock: new(sync.RWMutex)}
+	db.Config.CalculateConfigConstants()
 	return db, db.load()
 }
 
@@ -98,10 +105,8 @@ func (db *DB) Close() error {
 	return fmt.Errorf("%v", errs)
 }
 
-// Create a new collection.
-func (db *DB) Create(name string) error {
-	db.schemaLock.Lock()
-	defer db.schemaLock.Unlock()
+// create creates collection files. The function does not place a schema lock.
+func (db *DB) create(name string) error {
 	if _, exists := db.cols[name]; exists {
 		return fmt.Errorf("Collection %s already exists", name)
 	} else if err := os.MkdirAll(path.Join(db.path, name), 0700); err != nil {
@@ -110,6 +115,13 @@ func (db *DB) Create(name string) error {
 		return err
 	}
 	return nil
+}
+
+// Create a new collection.
+func (db *DB) Create(name string) error {
+	db.schemaLock.Lock()
+	defer db.schemaLock.Unlock()
+	return db.create(name)
 }
 
 // Return all collection names.
@@ -141,8 +153,6 @@ func (db *DB) Rename(oldName, newName string) error {
 		return fmt.Errorf("Collection %s does not exist", oldName)
 	} else if _, exists := db.cols[newName]; exists {
 		return fmt.Errorf("Collection %s already exists", newName)
-	} else if newName == oldName {
-		return fmt.Errorf("Old and new names are the same")
 	} else if err := db.cols[oldName].close(); err != nil {
 		return err
 	} else if err := os.Rename(path.Join(db.path, oldName), path.Join(db.path, newName)); err != nil {
@@ -286,4 +296,23 @@ func (db *DB) Dump(dest string) error {
 		return nil
 	}
 	return filepath.Walk(db.path, cpFun)
+}
+
+// ForceUse creates a collection if one does not yet exist. Returns collection handle. Panics on error.
+func (db *DB) ForceUse(name string) *Col {
+	db.schemaLock.RLock()
+	defer db.schemaLock.RUnlock()
+	if db.cols[name] == nil {
+		if err := db.create(name); err != nil {
+			tdlog.Panicf("ForceUse: failed to create collection - %v", err)
+		}
+	}
+	return db.cols[name]
+}
+
+// ColExists returns true only if the given collection name exists in the database.
+func (db *DB) ColExists(name string) bool {
+	db.schemaLock.RLock()
+	defer db.schemaLock.RUnlock()
+	return db.cols[name] != nil
 }
