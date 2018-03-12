@@ -49,18 +49,18 @@ func runAgent(c *cli.Context) error {
 		setting.LoadFromFileEnvironment(c.String("config"))
 	}
 
-	rabbit, m_error := mottainai.New().NewMachineryServer()
+	server, m_error := mottainai.New().NewMachineryServer()
 	if m_error != nil {
 		panic(m_error)
 	}
 
 	th := agenttasks.DefaultTaskHandler()
-	th.RegisterTasks(rabbit)
+	th.RegisterTasks(server)
 	agent.Map(th)
 	ID := utils.GenID()
 	log.INFO.Println("Worker ID: " + ID)
 
-	worker := rabbit.NewWorker(ID, setting.Configuration.AgentConcurrency)
+	worker := server.NewWorker(ID, setting.Configuration.AgentConcurrency)
 	Register(ID)
 	// agent.TimerSeconds(int64(200), true, func(l *corelog.Logger) {
 	// 		Register(ID)
