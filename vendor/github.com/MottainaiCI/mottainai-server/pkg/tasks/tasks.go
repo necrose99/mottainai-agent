@@ -55,6 +55,7 @@ type Task struct {
 	ArtefactPath string `json:"artefact_path" form:"artefact_path"`
 	StoragePath  string `json:"storage_path" form:"storage_path"`
 	RootTask     string `json:"root_task" form:"root_task"`
+	Prune        string `json:"prune" form:"prune"`
 
 	TagNamespace string `json:"tag_namespace" form:"tag_namespace"`
 
@@ -94,7 +95,7 @@ func (t *Task) IsWaiting() bool {
 }
 
 func (t *Task) ClearBuildLog() {
-	os.RemoveAll(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build.log"))
+	os.RemoveAll(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build_"+strconv.Itoa(t.ID)+".log"))
 }
 
 func (t *Task) Clear() {
@@ -105,7 +106,7 @@ func (t *Task) Clear() {
 func (t *Task) GetLogPart(pos int) string {
 	var b3 []byte
 	err := t.LockSection(func() error {
-		file, err := os.Open(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build.log"))
+		file, err := os.Open(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build_"+strconv.Itoa(t.ID)+".log"))
 		if err != nil {
 			return err
 		}
@@ -136,7 +137,7 @@ func (t *Task) GetLogPart(pos int) string {
 func (t *Task) TailLog(pos int) string {
 	var b3 []byte
 	err := t.LockSection(func() error {
-		file, err := os.Open(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build.log"))
+		file, err := os.Open(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build_"+strconv.Itoa(t.ID)+".log"))
 		if err != nil {
 			return err
 		}
@@ -194,7 +195,7 @@ func (t *Task) AppendBuildLog(s string) error {
 	os.MkdirAll(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID)), os.ModePerm)
 	return t.LockSection(func() error {
 
-		file, err := os.OpenFile(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build.log"), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModePerm)
+		file, err := os.OpenFile(path.Join(setting.Configuration.ArtefactPath, strconv.Itoa(t.ID), "build_"+strconv.Itoa(t.ID)+".log"), os.O_APPEND|os.O_WRONLY|os.O_CREATE, os.ModePerm)
 		if err != nil {
 			return err
 		}
