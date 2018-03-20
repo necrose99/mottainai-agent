@@ -97,6 +97,7 @@ func (h *TaskHandler) NewTaskFromMap(t map[string]interface{}) Task {
 		root_task     string
 		prune         string
 		tag_namespace string
+		cache_image   string
 	)
 	if str, ok := t["root_task"].(string); ok {
 		root_task = str
@@ -165,6 +166,11 @@ func (h *TaskHandler) NewTaskFromMap(t map[string]interface{}) Task {
 	if str, ok := t["prune"].(string); ok {
 		prune = str
 	}
+
+	if str, ok := t["cache_image"].(string); ok {
+		cache_image = str
+	}
+
 	task := Task{
 		Source:       source,
 		Script:       script,
@@ -187,6 +193,7 @@ func (h *TaskHandler) NewTaskFromMap(t map[string]interface{}) Task {
 		RootTask:     root_task,
 		TagNamespace: tag_namespace,
 		Prune:        prune,
+		CacheImage:   cache_image,
 	}
 	return task
 }
@@ -282,7 +289,15 @@ func HandleSuccess(docID string, result int) error {
 	} else {
 		fetcher.SetTaskResult("success")
 	}
-	fetcher.SetTaskStatus("done")
+
+	th := DefaultTaskHandler()
+
+	task_info := th.FetchTask(fetcher)
+	if task_info.Status != "stop" {
+		fetcher.SetTaskStatus("done")
+	} else {
+		fetcher.SetTaskStatus("stopped")
+	}
 	return nil
 }
 
@@ -291,6 +306,14 @@ func HandleErr(errstring, docID string) error {
 
 	fetcher.AppendTaskOutput(errstring)
 	fetcher.SetTaskResult("error")
-	fetcher.SetTaskStatus("done")
+
+	th := DefaultTaskHandler()
+
+	task_info := th.FetchTask(fetcher)
+	if task_info.Status != "stop" {
+		fetcher.SetTaskStatus("done")
+	} else {
+		fetcher.SetTaskStatus("stopped")
+	}
 	return nil
 }
