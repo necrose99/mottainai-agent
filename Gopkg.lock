@@ -43,7 +43,7 @@
     "pkg/tasks",
     "pkg/utils"
   ]
-  revision = "ca9bb141a6c42bcb245b7fbeea418c0aa7cf765a"
+  revision = "cdc9b039b9b23059a6beaa40a6aeae4aed42147f"
 
 [[projects]]
   branch = "master"
@@ -302,6 +302,12 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/robfig/cron"
+  packages = ["."]
+  revision = "b024fc5ea0e34bc3f83d9941c8d60b0622bfaca4"
+  version = "v1"
+
+[[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
@@ -394,7 +400,7 @@
 [[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
 
 [solve-meta]
   analyzer-name = "dep"
