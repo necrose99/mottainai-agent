@@ -20,15 +20,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"github.com/MottainaiCI/mottainai-server/pkg/client"
 	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
 
-	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
-
-	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
-	"github.com/MottainaiCI/mottainai-server/pkg/utils"
-	machinery "github.com/RichardKnop/machinery/v1"
-	"github.com/RichardKnop/machinery/v1/log"
 	"github.com/urfave/cli"
 )
 
@@ -43,38 +36,11 @@ var Agent = cli.Command{
 }
 
 func runAgent(c *cli.Context) error {
-	setting.GenDefault()
-	agent := mottainai.NewAgent()
+	m := mottainai.NewAgent()
+	var config string
 	if c.IsSet("config") {
-		setting.LoadFromFileEnvironment(c.String("config"))
+		config = c.String("config")
 	}
 
-	server, m_error := mottainai.New().NewMachineryServer()
-	if m_error != nil {
-		panic(m_error)
-	}
-
-	th := agenttasks.DefaultTaskHandler()
-	th.RegisterTasks(server)
-	agent.Map(th)
-	ID := utils.GenID()
-	log.INFO.Println("Worker ID: " + ID)
-
-	worker := server.NewWorker(ID, setting.Configuration.AgentConcurrency)
-	Register(ID)
-	// agent.TimerSeconds(int64(200), true, func(l *corelog.Logger) {
-	// 		Register(ID)
-	// 	})
-
-	go func(w *machinery.Worker, a *mottainai.MottainaiAgent) {
-		agent.Map(w)
-		agent.Start()
-	}(worker, agent)
-
-	return worker.Launch()
-}
-
-func Register(ID string) {
-	fetcher := client.NewClient()
-	fetcher.RegisterNode(ID)
+	return m.Run(config)
 }
