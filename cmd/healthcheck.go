@@ -16,26 +16,37 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
-package main
+
+package cmd
 
 import (
-	"os"
-
-	"github.com/MottainaiCI/mottainai-agent/cmd"
-	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
+	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
 
 	"github.com/urfave/cli"
 )
 
-func main() {
-	app := cli.NewApp()
-	app.Name = "Mottainai Agent"
-	app.Usage = "Task/Job Agent"
-	app.Version = setting.MOTTAINAI_VERSION
-	app.Commands = []cli.Command{
-		cmd.Agent,
-		cmd.Health,
+var Health = cli.Command{
+	Name:        "health",
+	Usage:       "Start HealthCheck service",
+	Description: `Mottainai Agent Healthcheck`,
+	Action:      runHealthCheck,
+	Flags: []cli.Flag{
+		stringFlag("config, c", "custom/conf/agent.yml", "Custom configuration file path"),
+		boolFlag("oneshot, o", "Execute once"),
+	},
+}
+
+func runHealthCheck(c *cli.Context) {
+	m := mottainai.NewAgent()
+	var config string
+	if c.IsSet("config") {
+		config = c.String("config")
 	}
-	app.Flags = append(app.Flags, []cli.Flag{}...)
-	app.Run(os.Args)
+	if c.IsSet("oneshot") {
+		m.HealthCheckSetup(config)
+		m.HealthClean()
+		return
+	}
+
+	m.HealthCheckRun(config)
 }
