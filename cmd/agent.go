@@ -1,6 +1,7 @@
 /*
 
 Copyright (C) 2017-2018  Ettore Di Giacinto <mudler@gentoo.org>
+                         Daniele Rondina <geaaru@sabayonlinux.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,27 +21,32 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package cmd
 
 import (
-	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
+	"fmt"
+	"os"
 
-	"github.com/urfave/cli"
+	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
+	"github.com/spf13/cobra"
+
+	v "github.com/spf13/viper"
 )
 
-var Agent = cli.Command{
-	Name:        "agent",
-	Usage:       "Start agent",
-	Description: `Mottainai agent`,
-	Action:      runAgent,
-	Flags: []cli.Flag{
-		stringFlag("config, c", "custom/conf/agent.yml", "Custom configuration file path"),
-	},
-}
+func newAgentCommand() *cobra.Command {
 
-func runAgent(c *cli.Context) error {
-	m := mottainai.NewAgent()
-	var config string
-	if c.IsSet("config") {
-		config = c.String("config")
+	var cmd = &cobra.Command{
+		Use:   "agent [OPTIONS]",
+		Short: "Start agent",
+		Args:  cobra.OnlyValidArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			var err error
+			m := mottainai.NewAgent()
+			err = m.Run(v.GetString("config"))
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		},
 	}
 
-	return m.Run(config)
+	return cmd
 }

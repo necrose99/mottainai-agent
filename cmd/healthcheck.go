@@ -1,6 +1,7 @@
 /*
 
 Copyright (C) 2017-2018  Ettore Di Giacinto <mudler@gentoo.org>
+                         Daniele Rondina <geaaru@sabayonlinux.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,32 +22,41 @@ package cmd
 
 import (
 	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
+	"github.com/spf13/cobra"
 
-	"github.com/urfave/cli"
+	v "github.com/spf13/viper"
 )
 
-var Health = cli.Command{
-	Name:        "health",
-	Usage:       "Start HealthCheck service",
-	Description: `Mottainai Agent Healthcheck`,
-	Action:      runHealthCheck,
-	Flags: []cli.Flag{
-		stringFlag("config, c", "custom/conf/agent.yml", "Custom configuration file path"),
-		boolFlag("oneshot, o", "Execute once"),
-	},
-}
+func newHealtcheckCommand() *cobra.Command {
 
-func runHealthCheck(c *cli.Context) {
-	m := mottainai.NewAgent()
-	var config string
-	if c.IsSet("config") {
-		config = c.String("config")
-	}
-	if c.IsSet("oneshot") {
-		m.HealthCheckSetup(config)
-		m.HealthClean()
-		return
+	var cmd = &cobra.Command{
+		Use:   "health [OPTIONS]",
+		Short: "Start HealthCheck service",
+		Args:  cobra.OnlyValidArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+
+			var err error
+			var oneshot bool
+
+			oneshot, err = cmd.Flags().GetBool("oneshot")
+			if err != nil {
+				panic(err)
+			}
+
+			m := mottainai.NewAgent()
+
+			if oneshot {
+				m.HealthCheckSetup(v.GetString("config"))
+				m.HealthClean()
+			} else {
+				m.HealthCheckRun(v.GetString("config"))
+			}
+
+		},
 	}
 
-	m.HealthCheckRun(config)
+	var flags = cmd.Flags()
+	flags.BoolP("oneshot", "o", false, "Execute once")
+
+	return cmd
 }

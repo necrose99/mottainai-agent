@@ -19,23 +19,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"os"
-
-	"github.com/MottainaiCI/mottainai-agent/cmd"
-	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
-
-	"github.com/urfave/cli"
+	agent "github.com/MottainaiCI/mottainai-agent/cmd"
+	common "github.com/MottainaiCI/mottainai-agent/common"
+	v "github.com/spf13/viper"
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "Mottainai Agent"
-	app.Usage = "Task/Job Agent"
-	app.Version = setting.MOTTAINAI_VERSION
-	app.Commands = []cli.Command{
-		cmd.Agent,
-		cmd.Health,
-	}
-	app.Flags = append(app.Flags, []cli.Flag{}...)
-	app.Run(os.Args)
+	v.SetDefault("config", common.MAGENT_DEF_CONFFILE)
+	v.SetEnvPrefix(common.MAGENT_ENV_PREFIX)
+
+	agent.Execute()
 }
