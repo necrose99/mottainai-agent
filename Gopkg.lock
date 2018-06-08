@@ -39,11 +39,12 @@
     "pkg/namespace",
     "pkg/nodes",
     "pkg/settings",
+    "pkg/static",
     "pkg/storage",
     "pkg/tasks",
     "pkg/utils"
   ]
-  revision = "2b7aac2cec9d7232b5062082e4f6027dd82cb9b4"
+  revision = "471132051f9237566719122756bd9ffa75a9687c"
 
 [[projects]]
   branch = "master"
