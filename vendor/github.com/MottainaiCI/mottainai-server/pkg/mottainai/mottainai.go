@@ -62,26 +62,26 @@ func Classic() *Mottainai {
 }
 
 func (m *Mottainai) SetStatic() {
-	m.Use(static.Static(
+	m.Use(macaron.Static(
 		path.Join(setting.Configuration.ArtefactPath),
 		macaron.StaticOptions{
 			Prefix: "artefact",
 		},
 	))
 
-	m.Use(static.Static(
+	m.Use(macaron.Static(
 		path.Join(setting.Configuration.NamespacePath),
 		macaron.StaticOptions{
 			Prefix: "namespace",
 		},
 	))
-	m.Use(static.Static(
+	m.Use(macaron.Static(
 		path.Join(setting.Configuration.StoragePath),
 		macaron.StaticOptions{
 			Prefix: "storage",
 		},
 	))
-	//	m.Use(toolbox.Toolboxer(m))
+
 	m.Use(static.Static(
 		path.Join(setting.Configuration.StaticRootPath, "public"),
 		macaron.StaticOptions{},
@@ -129,7 +129,12 @@ func (m *Mottainai) Start(fileconfig string) error {
 	log.Printf("Listen: %v://%s", setting.Configuration.Protocol, listenAddr)
 
 	//m.Run()
-	err := http.ListenAndServe(listenAddr, m)
+	var err error
+	if len(setting.Configuration.TLSCert) > 0 && len(setting.Configuration.TLSKey) > 0 {
+		err = http.ListenAndServeTLS(listenAddr, setting.Configuration.TLSCert, setting.Configuration.TLSKey, m)
+	} else {
+		err = http.ListenAndServe(listenAddr, m)
+	}
 
 	if err != nil {
 		log.Fatal(4, "Fail to start server: %v", err)
@@ -173,6 +178,12 @@ func (m *Mottainai) SendTask(docID int) (bool, error) {
 		_, err = broker.SendTask(task.TaskName, docID)
 		if err != nil {
 			fmt.Printf("Could not send task: %s", err.Error())
+			d.UpdateTask(docID, map[string]interface{}{
+				"result": "error",
+				"status": "done",
+				"output": "Backend error, could not send task to broker: " + err.Error(),
+			})
+
 			result = false
 			return
 		}
