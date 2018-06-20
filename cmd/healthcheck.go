@@ -23,8 +23,6 @@ package cmd
 import (
 	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
 	"github.com/spf13/cobra"
-
-	v "github.com/spf13/viper"
 )
 
 func newHealtcheckCommand() *cobra.Command {
@@ -46,10 +44,10 @@ func newHealtcheckCommand() *cobra.Command {
 			m := mottainai.NewAgent()
 
 			if oneshot {
-				m.HealthCheckSetup(v.GetString("config"))
+				m.HealthCheckSetup()
 				m.HealthClean()
 			} else {
-				m.HealthCheckRun(v.GetString("config"))
+				m.HealthCheckRun()
 			}
 
 		},

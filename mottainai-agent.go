@@ -21,12 +21,17 @@ package main
 import (
 	agent "github.com/MottainaiCI/mottainai-agent/cmd"
 	common "github.com/MottainaiCI/mottainai-agent/common"
-	v "github.com/spf13/viper"
+	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 )
 
 func main() {
+	v := setting.Configuration.Viper
 	v.SetDefault("config", common.MAGENT_DEF_CONFFILE)
 	v.SetEnvPrefix(common.MAGENT_ENV_PREFIX)
+	v.AutomaticEnv()
+
+	// Initialize Default Viper Configuration
+	setting.GenDefault(v)
 
 	agent.Execute()
 }

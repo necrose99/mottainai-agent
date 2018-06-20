@@ -27,7 +27,8 @@ import (
 	"github.com/spf13/cobra"
 
 	common "github.com/MottainaiCI/mottainai-agent/common"
-	v "github.com/spf13/viper"
+	s "github.com/MottainaiCI/mottainai-server/pkg/settings"
+	utils "github.com/MottainaiCI/mottainai-server/pkg/utils"
 )
 
 const (
@@ -52,13 +53,20 @@ var rootCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		var err error
+
+		// Parse configuration file
+		err = s.Configuration.Unmarshal()
+		utils.CheckError(err)
+	},
 }
 
 func init() {
 	var pflags = rootCmd.PersistentFlags()
 	pflags.StringP("config", "c", common.MAGENT_DEF_CONFFILE, "Mottainai Agent Config File")
 
-	v.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
+	s.Configuration.Viper.BindPFlag("config", rootCmd.PersistentFlags().Lookup("config"))
 
 	rootCmd.AddCommand(
 		newAgentCommand(),
