@@ -29,6 +29,7 @@ import (
 	common "github.com/MottainaiCI/mottainai-agent/common"
 	s "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	utils "github.com/MottainaiCI/mottainai-server/pkg/utils"
+	viper "github.com/spf13/viper"
 )
 
 const (
@@ -55,7 +56,9 @@ var rootCmd = &cobra.Command{
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		var err error
+		var v *viper.Viper = s.Configuration.Viper
 
+		v.SetConfigFile(v.Get("config").(string))
 		// Parse configuration file
 		err = s.Configuration.Unmarshal()
 		utils.CheckError(err)
@@ -71,6 +74,7 @@ func init() {
 	rootCmd.AddCommand(
 		newAgentCommand(),
 		newHealtcheckCommand(),
+		newPrintCommand(),
 	)
 }
 
