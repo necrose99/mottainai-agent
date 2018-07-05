@@ -47,7 +47,13 @@
     "pkg/user",
     "pkg/utils"
   ]
-  revision = "160a2353b0f6ee49f0b105553eb02bfacf2d6171"
+  revision = "97684fafb6fe5e9361facd397f5cd662cc840eab"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/MottainaiCI/passlib"
+  packages = ["."]
+  revision = "f6527380e5ed8dc116bebcf3463ca46951b450b2"
 
 [[projects]]
   branch = "master"
@@ -65,7 +71,6 @@
   name = "github.com/RichardKnop/machinery"
   packages = [
     "v1",
-    "v1/backends",
     "v1/backends/amqp",
     "v1/backends/dynamodb",
     "v1/backends/eager",
@@ -208,10 +213,10 @@
   version = "v0.3.3"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/libnetwork"
   packages = ["ipamutils"]
-  revision = "6d23f11e681f24ee31802939e243fe8be41a75eb"
-  version = "v0.8.0-dev.2"
+  revision = "b68af15b8c587cff0b7f6b715d9f7ad0ef7010ac"
 
 [[projects]]
   name = "github.com/fatih/color"
@@ -583,7 +588,6 @@
 [[projects]]
   name = "gopkg.in/hlandau/passlib.v1"
   packages = [
-    ".",
     "abstract",
     "hash/argon2",
     "hash/argon2/raw",
@@ -632,6 +636,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "33970503a1610c5354086b72480f093fcd4294f068e810b73ffd3199a26d20af"
+  inputs-digest = "2e7145f85bf7fb860649d49dde797b89c4f5c11b6a0a42f765952e9318aa80a2"
   solver-name = "gps-cdcl"
   solver-version = 1

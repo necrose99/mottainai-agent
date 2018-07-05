@@ -24,25 +24,30 @@
 #   go-tests = true
 #   unused-packages = true
 
+
+[[override]]
+  name = "github.com/RichardKnop/machinery"
+  version = "v1.3.7"
+
+[[override]]
+  branch = "master"
+  name = "github.com/fsouza/go-dockerclient"
+
+[[override]]
+  branch = "master"
+  name = "github.com/hlandau/degoutils"
+
+[[override]]
+  branch = "master"
+  name = "github.com/docker/docker"
+
+[[override]]
+  branch = "master"
+  name = "github.com/docker/libnetwork"
+
 [[override]]
   name = "github.com/Unknwon/com"
   branch = "master"
-
-[[constraint]]
-  name = "github.com/RichardKnop/machinery"
-  version = "v1.2.2"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/MottainaiCI/mottainai-server"
-
-[[constraint]]
-  name = "github.com/spf13/cobra"
-  version = "0.0.3"
-
-[[constraint]]
-  name = "github.com/spf13/viper"
-  version = "1.0.2"
 
 [prune]
   go-tests = true

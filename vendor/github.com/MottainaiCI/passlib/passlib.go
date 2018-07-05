@@ -13,7 +13,7 @@
 //   passlib.UseDefaults(passlib.Defaults20180601)
 //
 // See func UseDefaults for details.
-package passlib // import "gopkg.in/hlandau/passlib.v1"
+package passlib
 
 import (
 	"gopkg.in/hlandau/easymetric.v1/cexp"
