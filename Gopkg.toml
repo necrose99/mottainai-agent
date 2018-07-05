@@ -24,18 +24,25 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[override]]
+  name = "github.com/Unknwon/com"
+  branch = "master"
+
+[[constraint]]
+  name = "github.com/RichardKnop/machinery"
+  version = "v1.2.2"
 
 [[constraint]]
   branch = "master"
   name = "github.com/MottainaiCI/mottainai-server"
 
 [[constraint]]
-  name = "github.com/RichardKnop/machinery"
-  version = "v1.2.2"
+  name = "github.com/spf13/cobra"
+  version = "0.0.3"
 
-[[override]]
-  name = "github.com/Unknwon/com"
-  branch = "master"
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.0.2"
 
 [prune]
   go-tests = true
