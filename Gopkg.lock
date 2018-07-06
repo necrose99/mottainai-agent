@@ -44,10 +44,11 @@
     "pkg/static",
     "pkg/storage",
     "pkg/tasks",
+    "pkg/token",
     "pkg/user",
     "pkg/utils"
   ]
-  revision = "97684fafb6fe5e9361facd397f5cd662cc840eab"
+  revision = "5fb0bb0c9ef33ed76e708496c30d49755753e781"
 
 [[projects]]
   branch = "master"
@@ -440,6 +441,12 @@
   name = "github.com/satori/go.uuid"
   packages = ["."]
   revision = "36e9d2ebbde5e3f13ab2e25625fd453271d6522e"
+
+[[projects]]
+  name = "github.com/sethvargo/go-password"
+  packages = ["password"]
+  revision = "d207206009266fab3e355f1a0488b47ac24139c7"
+  version = "v0.1.1"
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
