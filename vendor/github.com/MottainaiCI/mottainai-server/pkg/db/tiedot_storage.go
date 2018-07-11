@@ -23,6 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -37,6 +38,7 @@ var StorageColl = "Storages"
 func (d *Database) IndexStorage() {
 	d.AddIndex(StorageColl, []string{"name"})
 	d.AddIndex(StorageColl, []string{"path"})
+	d.AddIndex(StorageColl, []string{"owner_id"})
 }
 
 func (d *Database) CreateStorage(t map[string]interface{}) (int, error) {
@@ -75,6 +77,9 @@ func (d *Database) SearchStorage(name string) (storage.Storage, error) {
 			return storage.Storage{}, err
 		}
 		res = append(res, storage.NewFromMap(readBack))
+	}
+	if len(res) == 0 {
+		return storage.Storage{}, errors.New("No storages found")
 	}
 	return res[0], nil
 }
