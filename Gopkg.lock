@@ -51,7 +51,7 @@
     "pkg/user",
     "pkg/utils"
   ]
-  revision = "5b23778d75ac8ce990bce2a54b1aff26f6d87ead"
+  revision = "e484cfbd07ab410a75b79a6746ffe319c7c6af80"
 
 [[projects]]
   branch = "master"
