@@ -20,10 +20,12 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-package database
+package tiedot
 
 import (
 	"strconv"
+
+	dbcommon "github.com/MottainaiCI/mottainai-server/pkg/db/common"
 
 	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
 )
@@ -37,7 +39,7 @@ func (d *Database) IndexPipeline() {
 }
 
 func (d *Database) InsertPipeline(t *agenttasks.Pipeline) (int, error) {
-	return d.CreatePipeline(t.ToMap())
+	return d.CreatePipeline(t.ToMap(false))
 }
 
 func (d *Database) CreatePipeline(t map[string]interface{}) (int, error) {
@@ -93,7 +95,7 @@ func (d *Database) GetPipeline(docID int) (agenttasks.Pipeline, error) {
 	return t, err
 }
 
-func (d *Database) ListPipelines() []DocItem {
+func (d *Database) ListPipelines() []dbcommon.DocItem {
 	return d.ListDocs(PipelinesColl)
 }
 
