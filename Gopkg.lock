@@ -51,9 +51,10 @@
     "pkg/template",
     "pkg/token",
     "pkg/user",
-    "pkg/utils"
+    "pkg/utils",
+    "pkg/webhook"
   ]
-  revision = "16c4751188df59bdc904e4a0c011e120ca208110"
+  revision = "b14de3164b2bbd7b2813fa91e7f2e5f6bc737c1b"
 
 [[projects]]
   branch = "master"
