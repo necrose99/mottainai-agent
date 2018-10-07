@@ -25,10 +25,11 @@ import (
 	"os"
 
 	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
+	s "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	"github.com/spf13/cobra"
 )
 
-func newAgentCommand() *cobra.Command {
+func newAgentCommand(config *s.Config) *cobra.Command {
 
 	var cmd = &cobra.Command{
 		Use:   "agent [OPTIONS]",
@@ -38,6 +39,7 @@ func newAgentCommand() *cobra.Command {
 
 			var err error
 			m := mottainai.NewAgent()
+			m.Map(config)
 			err = m.Run()
 			if err != nil {
 				fmt.Println(err)

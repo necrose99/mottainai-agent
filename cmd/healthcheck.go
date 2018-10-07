@@ -22,10 +22,11 @@ package cmd
 
 import (
 	"github.com/MottainaiCI/mottainai-server/pkg/mottainai"
+	s "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	"github.com/spf13/cobra"
 )
 
-func newHealtcheckCommand() *cobra.Command {
+func newHealtcheckCommand(config *s.Config) *cobra.Command {
 
 	var cmd = &cobra.Command{
 		Use:   "health [OPTIONS]",
@@ -42,7 +43,7 @@ func newHealtcheckCommand() *cobra.Command {
 			}
 
 			m := mottainai.NewAgent()
-
+			m.Map(config)
 			if oneshot {
 				m.HealthCheckSetup()
 				m.HealthClean()

@@ -30,7 +30,7 @@ import (
 	cobra "github.com/spf13/cobra"
 )
 
-func newPrintCommand() *cobra.Command {
+func newPrintCommand(config *s.Config) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "print",
 		Short: "Show configuration params",
@@ -38,7 +38,7 @@ func newPrintCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			fmt.Println("Configurations:")
-			fmt.Println(s.Configuration)
+			fmt.Println(config)
 		},
 	}
 
