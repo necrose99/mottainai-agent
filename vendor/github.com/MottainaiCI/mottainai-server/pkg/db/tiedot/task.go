@@ -29,6 +29,7 @@ import (
 	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
 
 	"github.com/MottainaiCI/mottainai-server/pkg/artefact"
+	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 )
 
 var TaskColl = "Tasks"
@@ -50,8 +51,8 @@ func (d *Database) CreateTask(t map[string]interface{}) (string, error) {
 	return d.InsertDoc(TaskColl, t)
 }
 
-func (d *Database) CloneTask(t string) (string, error) {
-	tdata, err := d.GetTask(t)
+func (d *Database) CloneTask(config *setting.Config, t string) (string, error) {
+	tdata, err := d.GetTask(config, t)
 	if err != nil {
 		return "", err
 	}
@@ -60,9 +61,9 @@ func (d *Database) CloneTask(t string) (string, error) {
 	return d.InsertTask(&tdata)
 }
 
-func (d *Database) DeleteTask(docID string) error {
+func (d *Database) DeleteTask(config *setting.Config, docID string) error {
 
-	t, err := d.GetTask(docID)
+	t, err := d.GetTask(config, docID)
 	if err != nil {
 		return err
 	}
@@ -70,11 +71,13 @@ func (d *Database) DeleteTask(docID string) error {
 	if err != nil {
 		return err
 	}
-	for _, artefact := range artefacts {
-		artefact.CleanFromTask()
-		d.DeleteArtefact(artefact.ID)
-	}
-	t.Clear()
+	d.Invoke(func(config *setting.Config) {
+		for _, artefact := range artefacts {
+			artefact.CleanFromTask(config)
+			d.DeleteArtefact(artefact.ID)
+		}
+		t.Clear(config.GetStorage().ArtefactPath, config.GetAgent().LockPath)
+	})
 	return d.DeleteDoc(TaskColl, docID)
 }
 
@@ -82,12 +85,12 @@ func (d *Database) UpdateTask(docID string, t map[string]interface{}) error {
 	return d.UpdateDoc(TaskColl, docID, t)
 }
 
-func (d *Database) GetTask(docID string) (agenttasks.Task, error) {
+func (d *Database) GetTask(config *setting.Config, docID string) (agenttasks.Task, error) {
 	doc, err := d.GetDoc(TaskColl, docID)
 	if err != nil {
 		return agenttasks.Task{}, err
 	}
-	th := agenttasks.DefaultTaskHandler()
+	th := agenttasks.DefaultTaskHandler(config)
 	t := th.NewTaskFromMap(doc)
 	t.ID = docID
 	return t, err
@@ -117,10 +120,10 @@ func (d *Database) ListTasks() []dbcommon.DocItem {
 	return d.ListDocs(TaskColl)
 }
 
-func (d *Database) AllTasks() []agenttasks.Task {
+func (d *Database) AllTasks(config *setting.Config) []agenttasks.Task {
 	tasks := d.DB().Use(TaskColl)
 	tasks_id := make([]agenttasks.Task, 0)
-	th := agenttasks.DefaultTaskHandler()
+	th := agenttasks.DefaultTaskHandler(config)
 
 	tasks.ForEachDoc(func(id int, docContent []byte) (willMoveOn bool) {
 		t := th.NewTaskFromJson(docContent)
@@ -131,7 +134,7 @@ func (d *Database) AllTasks() []agenttasks.Task {
 	return tasks_id
 }
 
-func (d *Database) AllNodeTask(id string) ([]agenttasks.Task, error) {
+func (d *Database) AllNodeTask(config *setting.Config, id string) ([]agenttasks.Task, error) {
 	queryResult, err := d.FindDoc(TaskColl, `[{"eq": "`+id+`", "in": ["node_id"]}]`)
 	var res []agenttasks.Task
 	if err != nil {
@@ -140,7 +143,7 @@ func (d *Database) AllNodeTask(id string) ([]agenttasks.Task, error) {
 	for docid := range queryResult {
 
 		// Read document
-		t, err := d.GetTask(docid)
+		t, err := d.GetTask(config, docid)
 		if err != nil {
 			return res, err
 		}
@@ -150,7 +153,7 @@ func (d *Database) AllNodeTask(id string) ([]agenttasks.Task, error) {
 	return res, nil
 }
 
-func (d *Database) AllUserTask(id string) ([]agenttasks.Task, error) {
+func (d *Database) AllUserTask(config *setting.Config, id string) ([]agenttasks.Task, error) {
 	queryResult, err := d.FindDoc(TaskColl, `[{"eq": "`+id+`", "in": ["owner_id"]}]`)
 	var res []agenttasks.Task
 	if err != nil {
@@ -159,7 +162,7 @@ func (d *Database) AllUserTask(id string) ([]agenttasks.Task, error) {
 	for docid := range queryResult {
 
 		// Read document
-		t, err := d.GetTask(docid)
+		t, err := d.GetTask(config, docid)
 		if err != nil {
 			return res, err
 		}

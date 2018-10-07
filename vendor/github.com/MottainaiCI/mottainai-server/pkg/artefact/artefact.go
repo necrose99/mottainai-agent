@@ -45,13 +45,15 @@ func NewFromJson(data []byte) Artefact {
 	return t
 }
 
-func (a *Artefact) CleanFromNamespace(namespace string) {
+func (a *Artefact) CleanFromNamespace(namespace string, config *setting.Config) {
 	//NamespacePath
-	os.RemoveAll(filepath.Join(setting.Configuration.NamespacePath, namespace, a.Path, a.Name))
+	os.RemoveAll(filepath.Join(config.GetStorage().NamespacePath, namespace,
+		a.Path, a.Name))
 }
 
-func (a *Artefact) CleanFromTask() {
-	os.RemoveAll(filepath.Join(setting.Configuration.ArtefactPath, strconv.Itoa(a.Task), a.Path, a.Name))
+func (a *Artefact) CleanFromTask(config *setting.Config) {
+	os.RemoveAll(filepath.Join(config.GetStorage().ArtefactPath,
+		strconv.Itoa(a.Task), a.Path, a.Name))
 }
 
 func NewFromMap(t map[string]interface{}) Artefact {

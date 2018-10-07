@@ -43,20 +43,23 @@ func NewWebHookServer() *WebHookServer {
 	return &WebHookServer{Mottainai: New()}
 }
 
-func ClassicWebHookServer() *WebHookServer {
-	return &WebHookServer{Mottainai: Classic()}
+func ClassicWebHookServer(config *setting.Config) *WebHookServer {
+	return &WebHookServer{Mottainai: Classic(config)}
 }
 
 func SetupWebHook(m *Mottainai) {
 
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: setting.Configuration.WebHookGitHubTokenUser})
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
+	m.Invoke(func(config *setting.Config) {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: config.GetWeb().WebHookGitHubTokenUser})
+		tc := oauth2.NewClient(oauth2.NoContext, ts)
 
-	// Get a client instance from github
-	client := github.NewClient(tc)
+		// Get a client instance from github
+		client := github.NewClient(tc)
 
-	m.Map(tc)
-	m.Map(client)
+		m.Map(tc)
+		m.Map(client)
+	})
+
 	a := anagent.New()
 
 	a.TimerSeconds(int64(5), true, func() {})
@@ -82,8 +85,11 @@ func (m *WebHookServer) Start() error {
 	SetupWebHook(m.Mottainai)
 	SetupWebHookAgent(m.Mottainai)
 
-	var listenAddr = fmt.Sprintf("%s:%s", setting.Configuration.HTTPAddr, setting.Configuration.HTTPPort)
-	log.Printf("Listen: %v://%s", setting.Configuration.Protocol, listenAddr)
+	var listenAddr string
+	m.Invoke(func(config *setting.Config) {
+		listenAddr = fmt.Sprintf("%s:%s", config.GetWeb().HTTPAddr, config.GetWeb().HTTPPort)
+		log.Printf("Listen: %v://%s", config.GetWeb().Protocol, listenAddr)
+	})
 
 	//m.Run()
 	err := http.ListenAndServe(listenAddr, m)

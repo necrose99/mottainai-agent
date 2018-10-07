@@ -38,18 +38,22 @@ type ToggleOptions struct {
 	AdminRequired   bool
 	ManagerRequired bool
 	DisableCSRF     bool
+	// TODO: BaseURL could be removed and handled inside WebConfig
+	BaseURL string
+	Config  *setting.Config
 }
 
 func Toggle(options *ToggleOptions) macaron.Handler {
 	return func(c *Context) {
 
 		// Redirect to dashboard if user tries to visit any non-login page.
-		if options.SignOutRequired && c.IsLogged && c.Req.RequestURI != "/" {
-			c.Redirect(setting.Configuration.AppSubURL + "/")
+		if options.SignOutRequired && c.IsLogged && !options.Config.GetWeb().CompareURI(c.Req.RequestURI, "/") {
+			c.Redirect(options.Config.GetWeb().BuildURI("/"))
 			return
 		}
 
-		if !options.SignOutRequired && !options.DisableCSRF && c.Req.Method == "POST" && !auth.IsAPIPath(c.Req.URL.Path) {
+		if !options.SignOutRequired && !options.DisableCSRF && c.Req.Method == "POST" &&
+			!auth.IsAPIPath(c.Req.URL.Path, options.Config.GetWeb()) {
 			csrf.Validate(c.Context, c.csrf)
 			if c.Written() {
 				return
@@ -58,24 +62,27 @@ func Toggle(options *ToggleOptions) macaron.Handler {
 		if options.SignInRequired {
 			if !c.IsLogged {
 				// Restrict API calls with error message.
-				if auth.IsAPIPath(c.Req.URL.Path) {
+				if auth.IsAPIPath(c.Req.URL.Path, options.Config.GetWeb()) {
 					c.JSON(403, map[string]string{
 						"message": "Only signed in user is allowed to call APIs.",
 					})
 					return
 				}
 
-				c.SetCookie("redirect_to", url.QueryEscape(setting.Configuration.AppSubURL+c.Req.RequestURI), 0, setting.Configuration.AppSubURL)
-				c.Redirect(setting.Configuration.AppSubURL + "/user/login")
+				c.SetCookie("redirect_to", url.QueryEscape(c.Req.RequestURI),
+					0, options.Config.GetWeb().BuildURI("/"))
+				c.Redirect(options.Config.GetWeb().BuildURI("/user/login"))
 				return
 			}
 		}
 
 		// Redirect to log in page if auto-signin info is provided and has not signed in.
-		if !options.SignOutRequired && !c.IsLogged && !auth.IsAPIPath(c.Req.URL.Path) &&
+		if !options.SignOutRequired && !c.IsLogged &&
+			!auth.IsAPIPath(c.Req.URL.Path, options.Config.GetWeb()) &&
 			len(c.GetCookie("u_name")) > 0 {
-			c.SetCookie("redirect_to", url.QueryEscape(setting.Configuration.AppSubURL+c.Req.RequestURI), 0, setting.Configuration.AppSubURL)
-			c.Redirect(setting.Configuration.AppSubURL + "/user/login")
+			c.SetCookie("redirect_to", url.QueryEscape(c.Req.RequestURI),
+				0, options.Config.GetWeb().BuildURI("/"))
+			c.Redirect(options.Config.GetWeb().BuildURI("/user/login"))
 			return
 		}
 

@@ -41,49 +41,54 @@ import (
 	"github.com/MottainaiCI/mottainai-server/pkg/utils"
 )
 
-func TemplatePreview(c *context.Context, templatename string) {
+func TemplatePreview(c *context.Context, templatename string, config *setting.Config) {
 	//c.Data["User"] = models.User{Name: "Unknown"}
-	c.Data["AppName"] = setting.Configuration.AppName
+	c.Data["AppName"] = config.GetWeb().AppName
 	c.Data["AppVer"] = setting.MOTTAINAI_VERSION
-	c.Data["AppURL"] = setting.Configuration.AppURL
+	c.Data["AppURL"] = config.GetWeb().AppURL
 	c.Data["Code"] = "2014031910370000009fff6782aadb2162b4a997acb69d4400888e0b9274657374"
-	//c.Data["ActiveCodeLives"] = setting.Configuration.Service.ActiveCodeLives / 60
-	//c.Data["ResetPwdCodeLives"] = setting.Configuration.Service.ResetPwdCodeLives / 60
+	//c.Data["ActiveCodeLives"] = config.Service.ActiveCodeLives / 60
+	//c.Data["ResetPwdCodeLives"] = config.Service.ResetPwdCodeLives / 60
 	//c.Data["CurDbValue"] = ""
 	c.HTML(200, templatename)
 	//c.HTML(200, (c.Params("*")))
 }
 
 func Setup(m *macaron.Macaron) {
-	funcMap := NewFuncMap()
-	m.Use(macaron.Renderer(macaron.RenderOptions{
-		Directory:         path.Join(setting.Configuration.StaticRootPath, "templates"),
-		AppendDirectories: []string{path.Join(setting.Configuration.CustomPath, "templates")},
-		Funcs:             funcMap,
-		IndentJSON:        macaron.Env != macaron.PROD,
-	}))
+	m.Invoke(func(config *setting.Config) {
+		funcMap := NewFuncMap(config)
+		m.Use(macaron.Renderer(macaron.RenderOptions{
+			Directory:         path.Join(config.GetWeb().StaticRootPath, "templates"),
+			AppendDirectories: []string{path.Join(config.GetWeb().TemplatePath, "templates")},
+			Funcs:             funcMap,
+			IndentJSON:        macaron.Env != macaron.PROD,
+		}))
+	})
 }
 
 // TODO: only initialize map once and save to a local variable to reduce copies.
-func NewFuncMap() []template.FuncMap {
+func NewFuncMap(config *setting.Config) []template.FuncMap {
 	return []template.FuncMap{map[string]interface{}{
 		"GoVer": func() string {
 			return strings.Title(runtime.Version())
 		},
 		"UseHTTPS": func() bool {
-			return strings.HasPrefix(setting.Configuration.AppURL, "https")
+			return strings.HasPrefix(config.GetWeb().AppURL, "https")
 		},
 		"AppName": func() string {
-			return setting.Configuration.AppName
+			return config.GetWeb().AppName
 		},
 		"AppSubURL": func() string {
-			return setting.Configuration.AppSubURL
+			return config.GetWeb().AppSubURL
 		},
 		"AppURL": func() string {
-			return setting.Configuration.AppURL
+			return config.GetWeb().AppURL
 		},
 		"AppVer": func() string {
 			return setting.MOTTAINAI_VERSION
+		},
+		"BuildURI": func(pattern string) string {
+			return config.GetWeb().BuildURI(pattern)
 		},
 		"LoadTimes": func(startTime time.Time) string {
 			return fmt.Sprint(time.Since(startTime).Nanoseconds()/1e6) + "ms"

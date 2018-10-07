@@ -38,6 +38,7 @@ import (
 
 	dbcommon "github.com/MottainaiCI/mottainai-server/pkg/db/common"
 	tiedot "github.com/MottainaiCI/mottainai-server/pkg/db/tiedot"
+	anagent "github.com/mudler/anagent"
 )
 
 type DatabaseDriver interface {
@@ -95,13 +96,13 @@ type DatabaseDriver interface {
 	// Pipelines
 	InsertPipeline(t *agenttasks.Pipeline) (string, error)
 	CreatePipeline(t map[string]interface{}) (string, error)
-	ClonePipeline(t string) (string, error)
+	ClonePipeline(config *setting.Config, t string) (string, error)
 	DeletePipeline(docID string) error
-	AllUserPipelines(id string) ([]agenttasks.Pipeline, error)
+	AllUserPipelines(config *setting.Config, id string) ([]agenttasks.Pipeline, error)
 	UpdatePipeline(docID string, t map[string]interface{}) error
-	GetPipeline(docID string) (agenttasks.Pipeline, error)
+	GetPipeline(config *setting.Config, docID string) (agenttasks.Pipeline, error)
 	ListPipelines() []dbcommon.DocItem
-	AllPipelines() []agenttasks.Pipeline
+	AllPipelines(config *setting.Config) []agenttasks.Pipeline
 
 	// settings
 	InsertSetting(t *setting.Setting) (string, error)
@@ -132,15 +133,15 @@ type DatabaseDriver interface {
 	// Tasks
 	InsertTask(t *agenttasks.Task) (string, error)
 	CreateTask(t map[string]interface{}) (string, error)
-	CloneTask(t string) (string, error)
-	DeleteTask(docID string) error
+	CloneTask(config *setting.Config, t string) (string, error)
+	DeleteTask(config *setting.Config, docID string) error
 	UpdateTask(docID string, t map[string]interface{}) error
-	GetTask(docID string) (agenttasks.Task, error)
+	GetTask(config *setting.Config, docID string) (agenttasks.Task, error)
 	GetTaskArtefacts(id string) ([]artefact.Artefact, error)
 	ListTasks() []dbcommon.DocItem
-	AllTasks() []agenttasks.Task
-	AllUserTask(id string) ([]agenttasks.Task, error)
-	AllNodeTask(id string) ([]agenttasks.Task, error)
+	AllTasks(config *setting.Config) []agenttasks.Task
+	AllUserTask(config *setting.Config, id string) ([]agenttasks.Task, error)
+	AllNodeTask(config *setting.Config, id string) ([]agenttasks.Task, error)
 
 	// Token
 	InsertToken(t *token.Token) (string, error)
@@ -180,12 +181,12 @@ type DatabaseDriver interface {
 	// Plans
 	InsertPlan(t *agenttasks.Plan) (string, error)
 	CreatePlan(t map[string]interface{}) (string, error)
-	ClonePlan(t string) (string, error)
+	ClonePlan(config *setting.Config, t string) (string, error)
 	DeletePlan(docID string) error
 	UpdatePlan(docID string, t map[string]interface{}) error
-	GetPlan(docID string) (agenttasks.Plan, error)
+	GetPlan(config *setting.Config, docID string) (agenttasks.Plan, error)
 	ListPlans() []dbcommon.DocItem
-	AllPlans() []agenttasks.Plan
+	AllPlans(config *setting.Config) []agenttasks.Plan
 
 	// WebHook
 	InsertWebHook(t *webhook.WebHook) (string, error)
@@ -206,6 +207,9 @@ type DatabaseDriver interface {
 	// TODO: Change it, expensive for now
 	CountWebHooks() int
 	AllWebHooks() []webhook.WebHook
+
+	// TODO: See if it's correct expone this as method
+	GetAgent() *anagent.Anagent
 }
 
 // For future, now in PoC state will just support
@@ -215,20 +219,24 @@ type Database struct {
 	DBPath  string
 	DBName  string
 	Driver  DatabaseDriver
+	// TODO: Temporary insert Config. See if add a ConfigDatabase object.
+	Config *setting.Config
 }
 
 var DBInstance *Database
 
-func NewDatabase(backend string) *Database {
+func NewDatabase(backend string, config *setting.Config) *Database {
 	if DBInstance == nil {
-		DBInstance = &Database{Backend: backend}
+		DBInstance = &Database{Backend: backend, Config: config}
 	}
 	if backend == "tiedot" {
 		fmt.Println("Tiedot backend")
-		DBInstance.Driver = tiedot.New(setting.Configuration.DBPath)
+		DBInstance.Driver = tiedot.New(config.GetDatabase().DBPath)
 	}
 
+	DBInstance.Driver.GetAgent().Map(config)
 	DBInstance.Driver.Init()
+	DBInstance.Config = config
 	return DBInstance
 }
 

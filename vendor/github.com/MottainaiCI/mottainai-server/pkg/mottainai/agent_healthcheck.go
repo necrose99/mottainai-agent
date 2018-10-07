@@ -37,29 +37,33 @@ import (
 )
 
 func (m *MottainaiAgent) HealthCheckSetup() {
-	th := agenttasks.DefaultTaskHandler()
-	m.Map(th)
 	//ID := utils.GenID()
 	//hostname := utils.Hostname()
 	//log.INFO.Println("Worker ID: " + ID)
 	//log.INFO.Println("Worker Hostname: " + hostname)
 
-	fetcher := client.NewClient(setting.Configuration.AppURL)
-	fetcher.Token = setting.Configuration.ApiKey
+	m.Invoke(func(config *setting.Config) {
+		th := agenttasks.DefaultTaskHandler(config)
+		m.Map(th)
+		fetcher := client.NewClient(config.GetWeb().AppURL, config)
+		fetcher.Token = config.GetAgent().ApiKey
 
-	//fetcher.RegisterNode(ID, hostname)
-	m.Map(fetcher)
+		//fetcher.RegisterNode(ID, hostname)
+		m.Map(fetcher)
 
-	m.TimerSeconds(int64(800), true, func() { m.HealthClean() })
+		m.TimerSeconds(int64(800), true, func() { m.HealthClean() })
+	})
 }
 
 func (m *MottainaiAgent) HealthClean() {
 	m.CleanBuildDir()
 
-	m.Invoke(func(c *client.Fetcher) {
+	m.Invoke(func(c *client.Fetcher, config *setting.Config) {
 
 		var tlist []agenttasks.Task
-		err := c.GetJSONOptions("/api/nodes/tasks/"+setting.Configuration.AgentKey, map[string]string{}, &tlist)
+
+		url := config.GetWeb().BuildURI("/api/nodes/tasks/" + config.GetAgent().AgentKey)
+		err := c.GetJSONOptions(url, map[string]string{}, &tlist)
 		if err != nil {
 			log.ERROR.Println("> Error getting task running on this host - skipping deep host cleanup")
 			return
@@ -90,34 +94,38 @@ func (m *MottainaiAgent) HealthClean() {
 // FIXME: temp (racy) workaround
 // As vagrant does not guarantee removal of imported boxes, cleanup periodically
 func (m *MottainaiAgent) CleanHealthCheckPathHost() {
-	for _, k := range setting.Configuration.HealthCheckCleanPath {
-		log.INFO.Println("> Removing dangling files in " + k)
-		if err := utils.RemoveContents(k); err != nil {
-			log.ERROR.Println("> Failed removing contents from ", k, " ", err.Error())
+
+	m.Invoke(func(config *setting.Config) {
+		for _, k := range config.GetAgent().HealthCheckCleanPath {
+			log.INFO.Println("> Removing dangling files in " + k)
+			if err := utils.RemoveContents(k); err != nil {
+				log.ERROR.Println("> Failed removing contents from ", k, " ", err.Error())
+			}
 		}
-	}
+	})
 }
 
 func (m *MottainaiAgent) CleanHealthCheckExec() {
-	for _, k := range setting.Configuration.HealthCheckExec {
-		log.INFO.Println("> Executing: " + k)
-		args := strings.Split(k, " ")
-		cmdName := args[0]
 
-		out, stderr, err := utils.Cmd(cmdName, args[1:])
-		if err != nil {
-			log.ERROR.Println("!! Error: ", err.Error()+": "+stderr)
-
+	m.Invoke(func(config *setting.Config) {
+		for _, k := range config.GetAgent().HealthCheckExec {
+			log.INFO.Println("> Executing: " + k)
+			args := strings.Split(k, " ")
+			cmdName := args[0]
+			out, stderr, err := utils.Cmd(cmdName, args[1:])
+			if err != nil {
+				log.ERROR.Println("!! Error: ", err.Error()+": "+stderr)
+			}
+			log.INFO.Println(out)
 		}
-		log.INFO.Println(out)
-	}
+	})
 }
 
 func (m *MottainaiAgent) CleanBuildDir() {
-	m.Invoke(func(c *client.Fetcher) {
-		log.INFO.Println("Cleaning " + setting.Configuration.BuildPath)
+	m.Invoke(func(c *client.Fetcher, config *setting.Config) {
+		log.INFO.Println("Cleaning " + config.GetAgent().BuildPath)
 
-		stuff, err := utils.ListAll(setting.Configuration.BuildPath)
+		stuff, err := utils.ListAll(config.GetAgent().BuildPath)
 		if err != nil {
 			panic(err)
 		}
@@ -130,7 +138,7 @@ func (m *MottainaiAgent) CleanBuildDir() {
 
 		for _, what := range stuff {
 			c.Doc(what)
-			th := agenttasks.DefaultTaskHandler()
+			th := agenttasks.DefaultTaskHandler(config)
 			task_info := th.FetchTask(c)
 			if th.Err != nil {
 				log.INFO.Println("Error fetching task: " + th.Err.Error())
@@ -140,7 +148,7 @@ func (m *MottainaiAgent) CleanBuildDir() {
 			log.INFO.Println(task_info)
 			if task_info.IsDone() || task_info.ID == "" {
 				log.INFO.Println("Removing: " + what)
-				os.RemoveAll(path.Join(setting.Configuration.BuildPath, what))
+				os.RemoveAll(path.Join(config.GetAgent().BuildPath, what))
 			} else {
 				log.INFO.Println("Keeping: " + what)
 			}

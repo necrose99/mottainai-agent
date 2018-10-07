@@ -84,30 +84,32 @@ func newStaticFileSystem(directory string) staticFileSystem {
 }
 
 // Static returns a middleware handler that serves static files in the given directory.
-func Static(directory string, staticOpt ...macaron.StaticOptions) macaron.Handler {
-	opt := prepareStaticOptions(directory, staticOpt)
+func Static(directory string, accessControlAllowOrigin string, config *setting.Config,
+	staticOpt ...macaron.StaticOptions) macaron.Handler {
+	opt := prepareStaticOptions(directory, config, staticOpt)
 
-	return func(ctx *context.Context, log *log.Logger) {
-		staticHandler(ctx, log, opt, func(ctx *context.Context) bool { return true })
+	return func(ctx *context.Context, log *log.Logger, config *setting.Config) {
+		staticHandler(ctx, log, config, opt, func(ctx *context.Context) bool { return true }, accessControlAllowOrigin)
 	}
 }
 
-func AuthStatic(fn func(*context.Context) bool, directory string, staticOpt ...macaron.StaticOptions) macaron.Handler {
-	opt := prepareStaticOptions(directory, staticOpt)
+func AuthStatic(fn func(*context.Context) bool, directory string, accessControlAllowOrigin string,
+	config *setting.Config, staticOpt ...macaron.StaticOptions) macaron.Handler {
+	opt := prepareStaticOptions(directory, config, staticOpt)
 
-	return func(ctx *context.Context, log *log.Logger) {
-		staticHandler(ctx, log, opt, fn)
+	return func(ctx *context.Context, log *log.Logger, config *setting.Config) {
+		staticHandler(ctx, log, config, opt, fn, accessControlAllowOrigin)
 	}
 }
 
-func prepareStaticOptions(dir string, options []macaron.StaticOptions) macaron.StaticOptions {
+func prepareStaticOptions(dir string, config *setting.Config, options []macaron.StaticOptions) macaron.StaticOptions {
 	var opt macaron.StaticOptions
 	if len(options) > 0 {
 		opt = options[0]
 	}
-	return prepareStaticOption(dir, opt)
+	return prepareStaticOption(dir, config, opt)
 }
-func prepareStaticOption(dir string, opt macaron.StaticOptions) macaron.StaticOptions {
+func prepareStaticOption(dir string, config *setting.Config, opt macaron.StaticOptions) macaron.StaticOptions {
 	// Defaults
 	if len(opt.IndexFile) == 0 {
 		opt.IndexFile = "index.html"
@@ -130,24 +132,46 @@ func (fs staticFileSystem) Open(name string) (http.File, error) {
 	return fs.dir.Open(name)
 }
 
-func staticHandler(ctx *context.Context, log *log.Logger, opt macaron.StaticOptions, fn func(*context.Context) bool) bool {
+func staticHandler(ctx *context.Context, log *log.Logger,
+	config *setting.Config, opt macaron.StaticOptions,
+	fn func(*context.Context) bool, accessControlAllowOrigin string) bool {
+
 	if ctx.Req.Method != "GET" && ctx.Req.Method != "HEAD" {
 		return false
 	}
 
-	file := ctx.Req.URL.Path
+	var denormalized bool = true
+	var file string
+	var err error
+
+	file = ctx.Req.URL.Path
 	// if we have a prefix, filter requests by stripping the prefix
 	if opt.Prefix != "" {
-		if !strings.HasPrefix(file, opt.Prefix) {
+		if !config.GetWeb().HasPrefixURL(file, opt.Prefix) {
 			return false
 		}
+		// Drop application prefix if defined
+		file, err = config.GetWeb().NormalizePath(file)
+		if err != nil {
+			return false
+		}
+		denormalized = false
 		file = file[len(opt.Prefix):]
 		if file != "" && file[0] != '/' {
 			return false
 		}
+
 	}
 	if !fn(ctx) {
 		return false
+	}
+
+	if denormalized {
+		// Drop application prefix if defined
+		file, err = config.GetWeb().NormalizePath(file)
+		if err != nil {
+			return false
+		}
 	}
 	f, err := opt.FileSystem.Open(file)
 	if err != nil {
@@ -184,12 +208,12 @@ func staticHandler(ctx *context.Context, log *log.Logger, opt macaron.StaticOpti
 	if !opt.SkipLogging {
 		log.Println("[Static] Serving " + file)
 	}
-	if len(setting.Configuration.AccessControlAllowOrigin) > 0 {
+	if len(accessControlAllowOrigin) > 0 {
 		// Set CORS headers for browser-based git clients
-		ctx.Resp.Header().Set("Access-Control-Allow-Origin", setting.Configuration.AccessControlAllowOrigin)
+		ctx.Resp.Header().Set("Access-Control-Allow-Origin", accessControlAllowOrigin)
 		ctx.Resp.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		ctx.Header().Set("Access-Control-Allow-Origin", setting.Configuration.AccessControlAllowOrigin)
+		ctx.Header().Set("Access-Control-Allow-Origin", accessControlAllowOrigin)
 		ctx.Header().Set("Access-Control-Allow-Credentials", "true")
 		ctx.Header().Set("Access-Control-Max-Age", "3600")
 		ctx.Header().Set("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
