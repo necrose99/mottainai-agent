@@ -5,7 +5,8 @@ REVISION := $(shell git rev-parse --short HEAD || echo unknown)
 VERSION := $(shell git describe --tags || echo $(REVISION) || echo dev)
 VERSION := $(shell echo $(VERSION) | sed -e 's/^v//g')
 ITTERATION := $(shell date +%s)
-BUILD_PLATFORMS ?= -osarch="linux/amd64" -osarch="linux/386" -osarch="linux/arm"
+# BUILD_PLATFORMS ?= -osarch="linux/amd64" -osarch="linux/386" -osarch="linux/arm"
+BUILD_PLATFORMS ?= -osarch="linux/amd64" -osarch="linux/386"
 
 all: deps build
 
@@ -28,9 +29,13 @@ deps:
 	go get golang.org/x/tools/cmd/cover
 	go get github.com/mattn/goveralls
 
-build:
+multiarch-build:
 	# Building gitlab-ci-multi-runner for $(BUILD_PLATFORMS)
-	gox $(BUILD_PLATFORMS) -output="release/$(NAME)-$(VERSION)-{{.OS}}-{{.Arch}}" -ldflags "-extldflags=-Wl,--allow-multiple-definition"
+	gox $(BUILD_PLATFORMS) -output="release/$(NAME)-$(VERSION)-{{.OS}}-{{.Arch}}" -ldflags "-extldflags=-Wl,--allow-multiple-definition" -cgo
+	CC="arm-linux-gnueabi-gcc" LD_LIBRARY_PATH=/usr/arm-linux-gnueabi/lib gox -osarch="linux/arm" -output="release/$(NAME)-$(VERSION)-{{.OS}}-{{.Arch}}" -ldflags "-extldflags=-Wl,--allow-multiple-definition" -parallel 1 -cgo
+
+build:
+	go build
 
 lint:
 	# Checking project code style...
