@@ -120,8 +120,8 @@
     "v1/tasks",
     "v1/tracing"
   ]
-  revision = "06b091303633c7ed7ebff3a08a72c572f3b8d1a3"
-  version = "v1.5.1"
+  revision = "21f6dd0def9983b08c773554c89f64b0176da3a2"
+  version = "v1.5.3"
 
 [[projects]]
   name = "github.com/RichardKnop/redsync"
@@ -1088,6 +1088,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3e422fe00c59ebe27fa00ced56843a058160da553be6c27fcf802b978f823b64"
+  inputs-digest = "bb79b3be53262ac81b4a769a102b2cda65f5faa0666109cfad67647d65839f68"
   solver-name = "gps-cdcl"
   solver-version = 1

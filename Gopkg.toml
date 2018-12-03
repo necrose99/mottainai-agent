@@ -30,7 +30,7 @@
 
 [[override]]
   name = "github.com/RichardKnop/machinery"
-  version = "v1.3.7"
+  version = "v1.5.3"
 
 [[override]]
   branch = "master"
