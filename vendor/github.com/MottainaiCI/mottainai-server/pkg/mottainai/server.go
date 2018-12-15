@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	config "github.com/RichardKnop/machinery/v1/config"
+
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
 	machinery "github.com/RichardKnop/machinery/v1"
@@ -53,6 +55,36 @@ type MottainaiServer struct {
 
 func NewServer() *MottainaiServer { return &MottainaiServer{Servers: make(map[string]*Broker)} }
 func NewBroker() *Broker          { return &Broker{} }
+
+func NewMachineryServer(queue string, settings *setting.Config) (*machinery.Server, error) {
+	var cnf = &config.Config{
+		Broker:          settings.GetBroker().Broker,
+		DefaultQueue:    queue,
+		ResultBackend:   settings.GetBroker().BrokerResultBackend,
+		ResultsExpireIn: settings.GetBroker().ResultsExpireIn,
+	}
+	switch broker := settings.GetBroker().Type; broker {
+	case "amqp":
+		cnf.AMQP = &config.AMQPConfig{
+			Exchange:     settings.GetBroker().BrokerExchange,
+			ExchangeType: settings.GetBroker().BrokerExchangeType,
+			BindingKey:   queue + "_key",
+			//BindingKey:   settings.BrokerBindingKey,
+		}
+	case "redis":
+		cnf.Redis = &config.RedisConfig{
+			MaxIdle:                settings.GetBroker().MaxIdle,
+			MaxActive:              settings.GetBroker().MaxActive,
+			IdleTimeout:            settings.GetBroker().IdleTimeout,
+			Wait:                   settings.GetBroker().Wait,
+			ReadTimeout:            settings.GetBroker().ReadTimeout,
+			WriteTimeout:           settings.GetBroker().WriteTimeout,
+			ConnectTimeout:         settings.GetBroker().ConnectTimeout,
+			DelayedTasksPollPeriod: settings.GetBroker().DelayedTasksPollPeriod,
+		}
+	}
+	return machinery.NewServer(cnf)
+}
 
 func (s *MottainaiServer) Add(queue string, config *setting.Config) *Broker {
 	broker := NewBroker()

@@ -66,6 +66,8 @@ type WebConfig struct {
 	WebHookGitHubTokenUser string `mapstructure:"github_token_user"`
 	WebHookGitHubSecret    string `mapstructure:"github_secret"`
 	WebHookToken           string `mapstructure:"webhook_token"`
+
+	LockPath string `mapstructure:"lock_path"`
 }
 
 type StorageConfig struct {
@@ -96,12 +98,21 @@ type BrokerConfig struct {
 	BrokerExchange      string `mapstructure:"exchange"`
 	BrokerExchangeType  string `mapstructure:"exchange_type"`
 	BrokerBindingKey    string `mapstructure:"binding_key"`
+
+	//Redis
+	MaxIdle                int  `mapstructure:"max_idle"`
+	MaxActive              int  `mapstructure:"max_active"`
+	IdleTimeout            int  `mapstructure:"max_idle_timeout"`
+	Wait                   bool `mapstructure:"wait"`
+	ReadTimeout            int  `mapstructure:"read_timeout"`
+	WriteTimeout           int  `mapstructure:"write_timeout"`
+	ConnectTimeout         int  `mapstructure:"connect_timeout"`
+	DelayedTasksPollPeriod int  `mapstructure:"delayed_tasks_poll_period"`
 }
 
 type AgentConfig struct {
 	SecretKey         string         `mapstructure:"secret_key"`
 	BuildPath         string         `mapstructure:"build_path"`
-	LockPath          string         `mapstructure:"lock_path"`
 	AgentConcurrency  int            `mapstructure:"concurrency"`
 	AgentKey          string         `mapstructure:"agent_key"`
 	ApiKey            string         `mapstructure:"api_key"`
@@ -198,6 +209,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("web.github_secret", "")
 	viper.SetDefault("web.github_token_user", "")
 	viper.SetDefault("web.webhook_token", "")
+	viper.SetDefault("web.lock_path", "/srv/mottainai/lock")
 
 	viper.SetDefault("storage.type", "dir")
 	viper.SetDefault("storage.artefact_path", "./artefact")
@@ -220,8 +232,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("broker.binding_key", "machinery_task")
 
 	viper.SetDefault("agent.secret_key", "vvH5oXJCTwHNGcMe2EJWDUKg9yY6qx")
-	viper.SetDefault("agent.build_path", "/build/")
-	viper.SetDefault("agent.lock_path", "/var/lock/mottainai/")
+	viper.SetDefault("agent.build_path", "/srv/mottainai/build")
 	viper.SetDefault("agent.concurrency", 1)
 	viper.SetDefault("agent.agent_key", "")
 	viper.SetDefault("agent.api_key", "")
@@ -242,7 +253,7 @@ func GenDefault(viper *v.Viper) {
 	viper.SetDefault("agent.docker_caps_drop", []string{})
 
 	viper.SetDefault("agent.lxd_endpoint", "")
-	viper.SetDefault("agent.lxd_config_dir", "")
+	viper.SetDefault("agent.lxd_config_dir", "/srv/mottainai/build/lxc/")
 	viper.SetDefault("agent.lxd_ephemeral_containers", true)
 	viper.SetDefault("agent.lxd_profiles", []string{})
 	viper.SetDefault("agent.lxd_cache_registry", map[string]int{})
@@ -379,6 +390,8 @@ web:
   github_token_user: %s
   github_secret: %s
   webhook_token: %s
+
+	lock_path: %s
 `,
 		c.Protocol, c.AppSubURL,
 		c.HTTPAddr, c.HTTPPort,
@@ -389,7 +402,7 @@ web:
 		c.AccessToken, c.WebHookGitHubToken,
 		c.WebHookGitHubTokenUser,
 		c.WebHookGitHubSecret,
-		c.WebHookGitHubToken)
+		c.WebHookGitHubToken, c.LockPath)
 
 	return ans
 }
@@ -433,12 +446,25 @@ broker:
   exchange: %s
   exchange_type: %s
   binding_key: %s
+
+	// Redis only
+	max_idle: %d
+	max_active: %d
+	max_idle_timeout: %d
+	wait: %v
+	read_timeout: %d
+	write_timeout: %d
+	connect_timeout: %d
+	delayed_tasks_poll_period: %d
 `,
 		c.Type, c.ResultsExpireIn, c.Broker,
 		c.BrokerDefaultQueue, c.BrokerResultBackend,
 		c.BrokerURI, c.BrokerPass,
 		c.BrokerUser, c.BrokerExchange,
-		c.BrokerExchangeType, c.BrokerBindingKey)
+		c.BrokerExchangeType, c.BrokerBindingKey,
+		c.MaxIdle, c.MaxActive, c.IdleTimeout,
+		c.Wait, c.ReadTimeout, c.WriteTimeout,
+		c.ConnectTimeout, c.DelayedTasksPollPeriod)
 
 	return ans
 }
@@ -448,7 +474,6 @@ func (c *AgentConfig) String() string {
 agent:
   secret_key: %s
   build_path: %s
-  lock_path: %s
   concurrency: %d
   agent_key: %s
   api_key: %s
@@ -476,7 +501,7 @@ agent:
   health_check_exec: %s
   health_check_clean_path: %s
 
-`, c.SecretKey, c.BuildPath, c.LockPath,
+`, c.SecretKey, c.BuildPath,
 		c.AgentConcurrency, c.AgentKey, c.ApiKey,
 		c.PrivateQueue, c.StandAlone, c.DownloadRateLimit,
 		c.UploadRateLimit, c.Queues,
