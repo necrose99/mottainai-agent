@@ -19,6 +19,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:207d1c991e823eaa28f97c9f49f5b687e6ee45dccb012a74c6c934981ccf64a6"
+  name = "code.cloudfoundry.org/systemcerts"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ca00b2f806f2fa1ded784ade357bad1ea3f1fbbe"
+
+[[projects]]
+  branch = "master"
   digest = "1:6da51e5ec493ad2b44cb04129e2d0a068c8fb9bd6cb5739d199573558696bb94"
   name = "github.com/Azure/go-ansiterm"
   packages = [
@@ -52,7 +60,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5261669361e713aef1fe8aed62db6eedf8f04c2ebee0aa882cb7545a8ee3862b"
+  digest = "1:f0768971d13266378f0f4567b873f5aef8e2f4ff0fec0f6364fdf0620996be2b"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/artefact",
@@ -78,7 +86,7 @@
     "pkg/webhook",
   ]
   pruneopts = "UT"
-  revision = "316eb90ae4c8b8d31039477ebf0a52407c66613e"
+  revision = "931d1ec884b0e930b630778467ffd0a57b37d06b"
 
 [[projects]]
   branch = "master"
@@ -606,7 +614,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ba0fc58055d9257a61634fdbc08e810e49dab994f174c0ffae3720d5a6eabecc"
+  digest = "1:faedc96dd80b12aa96cc27beef49cfdd87c796fdec9f94baf05ebda0e754122c"
   name = "github.com/lxc/lxd"
   packages = [
     "client",
@@ -623,7 +631,7 @@
     "shared/termios",
   ]
   pruneopts = "UT"
-  revision = "b3d07db0ab4cf8f05d359caeffe8897e62a1989c"
+  revision = "ae0a67076b879e32620c4e31a993f14a4a167408"
 
 [[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
@@ -1235,6 +1243,14 @@
   pruneopts = "UT"
   revision = "87155f248cf6ea9e38ae7613f9ea1e5bb397ac83"
   version = "v1.0.2"
+
+[[projects]]
+  branch = "v2"
+  digest = "1:e8c48aa61ea272e211858e52979ad4d114c60bfe6900d12431ac697482100b0a"
+  name = "gopkg.in/robfig/cron.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "be2e0b0deed5a68ffee390b4583a13aff8321535"
 
 [[projects]]
   digest = "1:866df945fc92cd221d2b384dca7de5f3131a6113b9f72a7a8019ae5046abe828"
