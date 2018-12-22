@@ -35,9 +35,13 @@ func newHealtcheckCommand(config *s.Config) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			var err error
-			var oneshot bool
+			var oneshot, force bool
 
 			oneshot, err = cmd.Flags().GetBool("oneshot")
+			if err != nil {
+				panic(err)
+			}
+			force, err = cmd.Flags().GetBool("force")
 			if err != nil {
 				panic(err)
 			}
@@ -45,17 +49,19 @@ func newHealtcheckCommand(config *s.Config) *cobra.Command {
 			m := mottainai.NewAgent()
 			m.Map(config)
 			if oneshot {
-				m.HealthCheckSetup()
-				m.HealthClean()
+				m.HealthCheckSetup(force)
+				if force || !m.AgentIsBusy() {
+					m.HealthClean(force)
+				}
 			} else {
-				m.HealthCheckRun()
+				m.HealthCheckRun(force)
 			}
-
 		},
 	}
 
 	var flags = cmd.Flags()
 	flags.BoolP("oneshot", "o", false, "Execute once")
+	flags.BoolP("force", "f", false, "Do not check for agent state (oneshot)")
 
 	return cmd
 }
