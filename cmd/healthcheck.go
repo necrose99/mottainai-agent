@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newHealtcheckCommand(config *s.Config) *cobra.Command {
+func newHealthcheckCommand(config *s.Config) *cobra.Command {
 
 	var cmd = &cobra.Command{
 		Use:   "health [OPTIONS]",

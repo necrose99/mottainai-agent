@@ -71,7 +71,7 @@ func initCommand(rootCmd *cobra.Command, config *s.Config) {
 
 	rootCmd.AddCommand(
 		newAgentCommand(config),
-		newHealtcheckCommand(config),
+		newHealthcheckCommand(config),
 		newPrintCommand(config),
 	)
 }
