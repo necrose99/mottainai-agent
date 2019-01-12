@@ -214,9 +214,9 @@ func (l *LxdExecutor) Play(docId string) (int, error) {
 
 	l.Report("Completed phase of artefacts download!")
 
-	containerName = "mottainai-" + strings.Replace(task_info.Image, "/", "_", 0) +
-		"-" + task_info.ID
+	containerName = l.GetContainerName(&task_info)
 
+	l.Report("Starting container " + containerName)
 	err = l.LaunchContainer(containerName, imageFingerprint, cachedImage)
 	if err != nil {
 		return 1, err
@@ -694,6 +694,10 @@ func (l *LxdExecutor) FindImage(image string) (string, lxd.ImageServer, string, 
 			srv = tmp_srv
 			srv_name = remote
 		}
+	}
+
+	if fingerprint == "" {
+		err = fmt.Errorf("No image found with alias or fingerprint %s", image)
 	}
 
 	return fingerprint, srv, srv_name, err
@@ -1249,4 +1253,26 @@ func (l *LxdExecutor) DeleteContainerDirRecursive(containerName, dir string) err
 	}
 
 	return nil
+}
+
+func (l *LxdExecutor) GetContainerName(task *Task) string {
+	var ans string
+
+	if task.Image != "" {
+		image := task.Image
+		if len(task.Image) > 20 {
+			image = task.Image[:19]
+		}
+
+		// To avoid error: Container name isn't a valid hostname
+		// I replace any . with -.
+		// I can't use / because it's used for snapshots.
+		ans = "mottainai-" +
+			strings.Replace(strings.Replace(image, "/", "-", -1), ".", "-", -1) +
+			"-" + task.ID
+	} else {
+		ans = "mottainai-" + task.ID
+	}
+
+	return ans
 }
