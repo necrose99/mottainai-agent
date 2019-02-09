@@ -87,7 +87,7 @@
     "pkg/webhook",
   ]
   pruneopts = "UT"
-  revision = "6818eb75882f707661a852b53574491cc00cdd92"
+  revision = "a1042e0fac5a82a3b79b12c0e208ffd6b53c0aef"
 
 [[projects]]
   branch = "master"
@@ -122,7 +122,7 @@
   revision = "b1d5d44c82d6c9fb6c8e8dad28412163586fd8ac"
 
 [[projects]]
-  digest = "1:efed6918471097ae40b01abb347408b14be4b49b1ad1be68492e87a0e87d80de"
+  digest = "1:bb45896e62c1d3c7d1aac2d4b25d273234b6bf3b6ce50c807e1271aa0f36f8aa"
   name = "github.com/RichardKnop/machinery"
   packages = [
     "v1",
@@ -149,8 +149,8 @@
     "v1/tracing",
   ]
   pruneopts = "UT"
-  revision = "21f6dd0def9983b08c773554c89f64b0176da3a2"
-  version = "v1.5.3"
+  revision = "77c8be0a4e4c5a9d33b789975c4dfbb1c287517a"
+  version = "v1.5.5"
 
 [[projects]]
   digest = "1:3ec1b34a4c161eee98ba2530ed7bee201ad57705d4c8e1d8c4bf27b58ce1e728"
