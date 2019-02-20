@@ -23,6 +23,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -47,6 +48,10 @@ func initConfig(config *s.Config) {
 	config.Viper.SetDefault("config", common.MAGENT_DEF_CONFFILE)
 	config.Viper.SetDefault("etcd-config", false)
 	config.Viper.AutomaticEnv()
+
+	// Create EnvKey Replacer for handle complex structure
+	replacer := strings.NewReplacer(".", "__")
+	config.Viper.SetEnvKeyReplacer(replacer)
 	config.Viper.SetTypeByDefaultValue(true)
 
 	//config.Unmarshal()
