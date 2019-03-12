@@ -55,3 +55,9 @@
 [prune]
   go-tests = true
   unused-packages = true
+  #non-go = true
+
+[[prune.project]]
+name = "github.com/lxc/lxd"
+unused-packages = false
+#non-go = false
