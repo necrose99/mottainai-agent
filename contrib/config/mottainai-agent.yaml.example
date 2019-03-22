@@ -12,6 +12,10 @@ general:
 
   # Others logrus options / providers
 
+  # Configure max timeout of fetch namespace files
+  # Field is in seconds. 0 means infinite.
+  # client_timeout: 360
+
 #----------------------------------------------
 # Mottainai Server API Server
 #----------------------------------------------
