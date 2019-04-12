@@ -43,6 +43,7 @@ func (d *Database) IndexTask() {
 	d.AddIndex(TaskColl, []string{"node_id"})
 	d.AddIndex(TaskColl, []string{"result", "status"})
 }
+
 func (d *Database) InsertTask(t *agenttasks.Task) (string, error) {
 	return d.CreateTask(t.ToMap())
 }
