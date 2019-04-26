@@ -60,7 +60,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:da92453cd858ab8a38ed2ba50690b50c26d7d181972a4d3226caafc7a9f38d63"
+  digest = "1:4b8e1c6594ecc874cd13e661987198143a7126e07bda351539caf6cd0df05bf3"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/artefact",
@@ -88,7 +88,7 @@
     "pkg/webhook",
   ]
   pruneopts = "UT"
-  revision = "73afcb16408e12b57a26b9329f4cf2ed053ad0e6"
+  revision = "85cd20b15a05910365c37b44851e105eb33053ba"
 
 [[projects]]
   branch = "master"
@@ -671,8 +671,7 @@
   version = "v1.0.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:a4f6fafa5191750325af085b9997d495d27dd34764a8736ce99c8f522475f760"
+  digest = "1:0e87a00a160a7a827450f1d6a1593004f5d812b58ba936f11e43a9a198534207"
   name = "github.com/lxc/lxd"
   packages = [
     "client",
@@ -689,7 +688,8 @@
     "shared/termios",
   ]
   pruneopts = "T"
-  revision = "ff65274fc19c52e1439e74ca449befbd45197ecd"
+  revision = "f51c28a3744372324480a92076dcaebf2d71ccac"
+  version = "lxd-3.12"
 
 [[projects]]
   digest = "1:c568d7727aa262c32bdf8a3f7db83614f7af0ed661474b24588de635c20024c7"
