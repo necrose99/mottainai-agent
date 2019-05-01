@@ -60,7 +60,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4b8e1c6594ecc874cd13e661987198143a7126e07bda351539caf6cd0df05bf3"
+  digest = "1:b4173c8f98d85ebc75de11d35e5af467d7fdc791c6d34596e544c159989bdc00"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/artefact",
@@ -71,6 +71,7 @@
     "pkg/db/arangodb",
     "pkg/db/common",
     "pkg/db/tiedot",
+    "pkg/event",
     "pkg/logging",
     "pkg/markup",
     "pkg/mottainai",
@@ -86,9 +87,11 @@
     "pkg/user",
     "pkg/utils",
     "pkg/webhook",
+    "routes/schema",
+    "routes/schema/v1",
   ]
   pruneopts = "UT"
-  revision = "85cd20b15a05910365c37b44851e105eb33053ba"
+  revision = "ce97f84b13b493bbe1f7e52cd3ad37524d45db3a"
 
 [[projects]]
   branch = "master"

@@ -23,6 +23,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package mottainai
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -230,13 +231,13 @@ func (m *Mottainai) Start() error {
 
 	m.Invoke(func(config *setting.Config, l *logging.Logger) {
 		server.Add(config.GetBroker().BrokerDefaultQueue, config)
-		if config.GetBroker().Type == "amqp" {
-			rmqc, r_error := rabbithole.NewClient(
+		if config.GetBroker().Type == "amqp" && config.GetBroker().BrokerURI != "" {
+			rmqc, err := rabbithole.NewClient(
 				config.GetBroker().BrokerURI,
 				config.GetBroker().BrokerUser,
 				config.GetBroker().BrokerPass)
-			if r_error != nil {
-				panic(r_error)
+			if err != nil {
+				panic(err)
 			}
 			m.Map(rmqc)
 		}
@@ -435,33 +436,75 @@ func (m *Mottainai) ProcessPipeline(docID string) (bool, error) {
 	return result, rerr
 }
 
+func (m *Mottainai) FailTask(task, reason string) {
+	m.Invoke(func(d *database.Database, l *logging.Logger) {
+		l.WithFields(logrus.Fields{
+			"component": "core",
+			"task_id":   task,
+			"error":     reason,
+		}).Error(reason)
+		d.Driver.UpdateTask(task, map[string]interface{}{
+			"result": "error",
+			"status": "done",
+			"output": reason,
+		})
+	})
+}
+
 func (m *Mottainai) SendTask(docID string) (bool, error) {
-	result := true
+	result := false
 	var err error
 	m.Invoke(func(d *database.Database, server *MottainaiServer, l *logging.Logger, th *agenttasks.TaskHandler, config *setting.Config) {
 
 		task, err := d.Driver.GetTask(config, docID)
 		if err != nil {
-			result = false
+			m.FailTask(docID, "Failed getting task information")
+
 			return
 		}
-		task.ClearBuildLog(config.GetStorage().ArtefactPath)
-		var broker *Broker
-		if len(task.Queue) > 0 {
-			broker = server.Get(task.Queue, config)
-			l.WithFields(logrus.Fields{
-				"component": "core",
-				"task_id":   docID,
-				"queue":     task.Queue,
-			}).Info("Sending task")
-		} else {
-			broker = server.Get(config.GetBroker().BrokerDefaultQueue, config)
-			l.WithFields(logrus.Fields{
-				"component": "core",
-				"task_id":   docID,
-				"queue":     config.GetBroker().BrokerDefaultQueue,
-			}).Info("Sending task")
+
+		// Check setting if we have to process this.
+		if protectOverwrite, _ := d.Driver.GetSettingByKey(setting.SYSTEM_PROTECT_NAMESPACE_OVERWRITE); protectOverwrite.IsEnabled() {
+			// Check for waiting/running tasks and do not send in such case
+			wtasks, err := d.Driver.GetTaskByStatus(d.Config, "waiting")
+			if err != nil {
+				m.FailTask(docID, "Failed getting task information")
+				return
+			}
+			for _, t := range wtasks {
+				if t.TagNamespace == task.TagNamespace {
+					err = errors.New("Task targeting same namespace is waiting to start")
+					m.FailTask(docID, "Task targeting same namespace is waiting to start")
+					return
+				}
+			}
+			rtasks, err := d.Driver.GetTaskByStatus(d.Config, "running")
+			if err != nil {
+				m.FailTask(docID, "Failed getting task information")
+				return
+			}
+			for _, t := range rtasks {
+				if t.TagNamespace == task.TagNamespace {
+					err = errors.New("Task targeting same namespace already running")
+					m.FailTask(docID, err.Error())
+					return
+				}
+			}
 		}
+
+		task.ClearBuildLog(config.GetStorage().ArtefactPath)
+
+		q := config.GetBroker().BrokerDefaultQueue
+		if len(task.Queue) > 0 {
+			q = task.Queue
+		}
+
+		l.WithFields(logrus.Fields{
+			"component": "core",
+			"task_id":   docID,
+			"queue":     q,
+		}).Info("Sending task")
+		broker := server.Get(q, config)
 
 		d.Driver.UpdateTask(docID, map[string]interface{}{"status": "waiting", "result": "none"})
 
@@ -472,37 +515,22 @@ func (m *Mottainai) SendTask(docID string) (bool, error) {
 		}).Debug("Task")
 
 		if !th.Exists(task.Type) {
-			l.WithFields(logrus.Fields{
-				"component": "core",
-				"task_id":   docID,
-				"error":     "Could not send task: Invalid task type",
-			}).Error("Invalid task type")
-			result = false
+			err = errors.New("Could not send task: Invalid task type")
+			m.FailTask(docID, err.Error())
 			return
 		}
 
 		_, err = broker.SendTask(&BrokerSendOptions{Retry: task.Trials(), Delayed: task.Delayed, Type: task.Type, TaskID: docID})
 		if err != nil {
-			l.WithFields(logrus.Fields{
-				"component": "core",
-				"task_id":   docID,
-				"error":     err.Error(),
-			}).Error("Error while sending task")
-			d.Driver.UpdateTask(docID, map[string]interface{}{
-				"result": "error",
-				"status": "done",
-				"output": "Backend error, could not send task to broker: " + err.Error(),
-			})
-
-			result = false
+			m.FailTask(docID, "Backend error, could not send task to broker: "+err.Error())
 			return
 		}
+		result = true
 
 		l.WithFields(logrus.Fields{
 			"component": "core",
 			"task_id":   docID,
 		}).Info("Task sent")
-
 	})
 	return result, err
 }
