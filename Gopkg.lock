@@ -60,7 +60,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e782fcd515ea0130ec4000ecec4b72e5cbc9a05473e5ed145d9e1ea9f0a2a7f7"
+  digest = "1:b9db6dd7dd5b14b967e877d210777688f24750b1abf73c59c0cd38bf84020e6c"
   name = "github.com/MottainaiCI/mottainai-server"
   packages = [
     "pkg/artefact",
@@ -78,6 +78,7 @@
     "pkg/namespace",
     "pkg/nodes",
     "pkg/organization",
+    "pkg/secret",
     "pkg/settings",
     "pkg/static",
     "pkg/storage",
@@ -91,7 +92,7 @@
     "routes/schema/v1",
   ]
   pruneopts = "UT"
-  revision = "be885df2818fecbf86348ae2279505feb403f067"
+  revision = "af3bdc829fc675469f278fbd2fe7fd030086f08c"
 
 [[projects]]
   branch = "master"

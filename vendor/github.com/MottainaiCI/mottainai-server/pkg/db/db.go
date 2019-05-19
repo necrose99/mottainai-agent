@@ -23,11 +23,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
+	"errors"
+
 	"github.com/MottainaiCI/mottainai-server/pkg/artefact"
 	arango "github.com/MottainaiCI/mottainai-server/pkg/db/arangodb"
 	"github.com/MottainaiCI/mottainai-server/pkg/namespace"
 	"github.com/MottainaiCI/mottainai-server/pkg/nodes"
 	organization "github.com/MottainaiCI/mottainai-server/pkg/organization"
+	"github.com/MottainaiCI/mottainai-server/pkg/secret"
 	setting "github.com/MottainaiCI/mottainai-server/pkg/settings"
 	"github.com/MottainaiCI/mottainai-server/pkg/storage"
 	agenttasks "github.com/MottainaiCI/mottainai-server/pkg/tasks"
@@ -208,6 +211,23 @@ type DatabaseDriver interface {
 	CountWebHooks() int
 	AllWebHooks() []webhook.WebHook
 
+	// Secret
+	InsertSecret(t *secret.Secret) (string, error)
+	CreateSecret(t map[string]interface{}) (string, error)
+	DeleteSecret(docID string) error
+	UpdateSecret(docID string, t map[string]interface{}) error
+	GetSecretByUserID(id string) (secret.Secret, error)
+	GetSecretByName(id string) (secret.Secret, error)
+
+	GetSecretsByUserID(id string) ([]secret.Secret, error)
+	GetSecretsByName(id string) ([]secret.Secret, error)
+
+	GetSecret(docID string) (secret.Secret, error)
+	ListSecrets() []dbcommon.DocItem
+	// TODO: Change it, expensive for now
+	CountSecrets() int
+	AllSecrets() []secret.Secret
+
 	// TODO: See if it's correct expone this as method
 	GetAgent() *anagent.Anagent
 }
@@ -238,7 +258,14 @@ func NewDatabase(config *setting.Config) *Database {
 			config.GetDatabase().User, config.GetDatabase().Password,
 			config.GetDatabase().CertPath, config.GetDatabase().KeyPath,
 			config.GetDatabase().Endpoints)
+	default:
+		panic(errors.New("Invalid engine defined: '" + config.GetDatabase().DBEngine + "'"))
 	}
+
+	if DBInstance.Driver == nil {
+		panic(errors.New("Error on initialize Database Driver"))
+	}
+
 	DBInstance.Driver.GetAgent().Map(config)
 	DBInstance.Driver.Init()
 	DBInstance.Config = config
