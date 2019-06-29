@@ -24,6 +24,28 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[constraint]]
+   name = "github.com/MottainaiCI/mottainai-server"
+   branch = "master"
+
+
+[[override]]
+  name = "k8s.io/cli-runtime"
+  branch = "release-1.14"
+
+[[override]]
+  name = "github.com/russross/blackfriday"
+  version = "v1.4-2-g300106c228d52c"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  branch = "release-1.14"
+
+[[override]]
+  name = "k8s.io/kubernetes"
+  branch = "release-1.14"
+
+
 [[override]]
    name = "gopkg.in/ini.v1"
    version = "v1.38.1"
