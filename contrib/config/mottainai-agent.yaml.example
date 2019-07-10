@@ -61,7 +61,10 @@ agent:
   concurrency: 1
   # Secret Key of the Agent
   #secret_key: "xxxxxxxx"
-  #executor: 'docker|lxd|qemu'
+  #executor:
+  # - docker
+  # - lxd
+  # - virtualbox
 
   # Define Size of private queue
   # private_queue: 1
@@ -86,6 +89,10 @@ agent:
   # Define operations executed by Agent Healtcheck
   health_check_exec:
      - docker system prune --force --all --volumes
+     # For LXD
+     # - mottainai-lxd-cleanup-zombie-containers
+     # - mottainai-lxd-cleanup-expired-cached-images
+
   # health_check_clean_path:
 
   # ----------------------------------
