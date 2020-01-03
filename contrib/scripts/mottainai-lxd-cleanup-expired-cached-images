@@ -26,6 +26,13 @@ main () {
   local fingerprint=0
   local skip_image=false
 
+  [[ $DEBUG && $DEBUG == true ]] && echo "IMAGE_DESCR_PREFIX = $IMAGE_DESCR_PREFIX"
+
+  if [ "$IMAGE_DESCR_PREFIX" == "-" ] ; then
+    # Drop always all images
+    IMAGE_DESCR_PREFIX=""
+  fi
+
   IFS=$'\n'
   for row in $out ; do
     aliases="$(echo $row | cut -d',' -f 1)"
