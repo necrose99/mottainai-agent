@@ -54,6 +54,7 @@ func (b *Broker) StartConsuming(consumerTag string, concurrency int, taskProcess
 
 	conn, channel, queue, _, amqpCloseChan, err := b.Connect(
 		b.GetConfig().Broker,
+		b.GetConfig().MultipleBrokerSeparator,
 		b.GetConfig().TLSConfig,
 		b.GetConfig().AMQP.Exchange,     // exchange name
 		b.GetConfig().AMQP.ExchangeType, // exchange type
@@ -128,6 +129,7 @@ func (b *Broker) GetOrOpenConnection(queueName string, queueBindingKey string, e
 		}
 		conn.connection, conn.channel, conn.queue, conn.confirmation, conn.errorchan, err = b.Connect(
 			b.GetConfig().Broker,
+			b.GetConfig().MultipleBrokerSeparator,
 			b.GetConfig().TLSConfig,
 			b.GetConfig().AMQP.Exchange,     // exchange name
 			b.GetConfig().AMQP.ExchangeType, // exchange type
@@ -147,7 +149,7 @@ func (b *Broker) GetOrOpenConnection(queueName string, queueBindingKey string, e
 		go func() {
 			select {
 			case err = <-conn.errorchan:
-				log.INFO.Printf("Error occured on queue: %s. Reconnecting", queueName)
+				log.INFO.Printf("Error occurred on queue: %s. Reconnecting", queueName)
 				b.connectionsMutex.Lock()
 				delete(b.connections, queueName)
 				b.connectionsMutex.Unlock()
@@ -330,7 +332,7 @@ func (b *Broker) consumeOne(delivery amqp.Delivery, taskProcessor iface.TaskProc
 		return nil
 	}
 
-	log.INFO.Printf("Received new message: %s", delivery.Body)
+	log.DEBUG.Printf("Received new message: %s", delivery.Body)
 
 	err := taskProcessor.Process(signature)
 	delivery.Ack(multiple)
@@ -371,6 +373,7 @@ func (b *Broker) delay(signature *tasks.Signature, delayMs int64) error {
 	}
 	conn, channel, _, _, _, err := b.Connect(
 		b.GetConfig().Broker,
+		b.GetConfig().MultipleBrokerSeparator,
 		b.GetConfig().TLSConfig,
 		b.GetConfig().AMQP.Exchange,     // exchange name
 		b.GetConfig().AMQP.ExchangeType, // exchange type
