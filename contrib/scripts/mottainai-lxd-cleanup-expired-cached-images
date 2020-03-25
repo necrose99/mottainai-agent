@@ -8,6 +8,7 @@
 
 MOTTAINAI_AGENT_CONFIG="${MOTTAINAI_AGENT_CONFIG:-/etc/mottainai/mottainai-agent.yml}"
 IMAGE_DESCR_PREFIX="${IMAGE_DESCR_PREFIX:-Mottainai}"
+IMAGE_IGNORE_ALIASES="${IMAGE_IGNORE_ALIASES:-0}"
 
 get_lxd_conf_dir () {
   local _value=$(cat $MOTTAINAI_AGENT_CONFIG 2>/dev/null | shyaml "get-value" "agent.lxd_config_dir" 2> /dev/null)
@@ -42,7 +43,7 @@ main () {
     [[ $DEBUG && $DEBUG == true ]] && \
       echo "Image $fingerprint with aliases '$aliases' and descr $descr"
 
-    if [ -n "${aliases}" ] ; then
+    if [[ "${IMAGE_IGNORE_ALIASES}" == 0 && -n "${aliases}" ]] ; then
       continue
     fi
 
