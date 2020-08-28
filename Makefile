@@ -40,9 +40,9 @@ endif
 
 build:
 ifeq ($(EXTENSIONS),)
-		go build
+		CGO_ENABLED=0 go build
 else
-		go build -tags $(EXTENSIONS)
+		CGO_ENABLED=0 go build -tags $(EXTENSIONS)
 endif
 
 lint:
